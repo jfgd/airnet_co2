@@ -23,6 +23,9 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 
+#include "EPD_1in54_V2.h"
+#include "GUI_Paint.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,6 +116,15 @@ static inline void led_yellow_off(void)
   HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
 }
 
+void DEV_SPI_WriteByte(UBYTE value)
+{
+  HAL_StatusTypeDef status;
+  status = HAL_SPI_Transmit(&hspi1, &value, 1, 1000);
+  if (status != HAL_OK) {
+    printf("Error DEV_SPI_WriteByte HAL_SPI_Transmit %d\n", status);
+  }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -166,6 +178,16 @@ int main(void)
     HAL_Delay(200);
     led_yellow_off();
   }
+
+  HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_SET);
+  printf("init\n");
+  EPD_1IN54_V2_Init();
+  printf("clear\n");
+  EPD_1IN54_V2_Clear();
+  printf("display\n");
+  EPD_1IN54_V2_Display(gImage);
+
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
 
