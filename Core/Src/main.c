@@ -83,6 +83,36 @@ int __io_putchar(int ch)
   return ch;
 }
 
+static inline void led_red_on(void)
+{
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+}
+
+static inline void led_red_off(void)
+{
+  HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+}
+
+static inline void led_green_on(void)
+{
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+}
+
+static inline void led_green_off(void)
+{
+  HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_2);
+}
+
+static inline void led_yellow_on(void)
+{
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+}
+
+static inline void led_yellow_off(void)
+{
+  HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -125,6 +155,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   printf("Hello from AirNet CO2\n");
+  for (int i = 0 ; i < 3 ; i++) {
+    led_red_on();
+    HAL_Delay(200);
+    led_green_on();
+    led_red_off();
+    HAL_Delay(200);
+    led_yellow_on();
+    led_green_off();
+    HAL_Delay(200);
+    led_yellow_off();
+  }
 
   /* USER CODE END 2 */
 
