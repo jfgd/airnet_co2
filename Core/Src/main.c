@@ -60,6 +60,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
+uint8_t gImage[5000];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -167,6 +169,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   printf("Hello from AirNet CO2\n");
+
+
+  Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
+  Paint_SelectImage(gImage);
+  Paint_Clear(WHITE);
+  Paint_DrawString_EN(50, 85, VERSION, &Font20, BLACK, WHITE);
+
   for (int i = 0 ; i < 3 ; i++) {
     led_red_on();
     HAL_Delay(200);

@@ -70,6 +70,7 @@ Core/Src/sysmem.c \
 Core/Src/syscalls.c
 
 C_SOURCES += Drivers/EPD/EPD_1in54_V2.c Drivers/EPD/GUI_Paint.c
+C_SOURCES += Drivers/EPD/Fonts/font12.c Drivers/EPD/Fonts/font20.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -126,6 +127,8 @@ C_DEFS =  \
 -DUSE_HAL_DRIVER \
 -DSTM32U031xx
 
+VERSION := \"$(shell git describe --always)\"
+C_DEFS += -DVERSION="$(VERSION)"
 
 # AS includes
 AS_INCLUDES = 
@@ -138,7 +141,7 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32U0xx/Include \
 -IDrivers/CMSIS/Include
 
-C_INCLUDES += -IDrivers/EPD 
+C_INCLUDES += -IDrivers/EPD
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
