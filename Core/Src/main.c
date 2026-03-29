@@ -118,6 +118,25 @@ static inline void led_yellow_off(void)
   HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
 }
 
+uint32_t rtc_get_tick(void)
+{
+  RTC_TimeTypeDef time;
+  if (HAL_RTC_GetTime(&hrtc, &time, 0) != HAL_OK) {
+    printf("Error get time\n");
+  }
+  return UINT32_MAX - time.SubSeconds;
+}
+
+uint32_t rtc_ticks_to_ms(uint32_t ticks)
+{
+  return ticks * ((1000 * (127 + 1)) / 32000);
+}
+
+uint32_t rtc_get_ms(void)
+{
+  return rtc_ticks_to_ms(rtc_get_tick());
+}
+
 void DEV_SPI_WriteByte(UBYTE value)
 {
   HAL_StatusTypeDef status;
@@ -137,6 +156,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  uint32_t adc_val;
 
   /* USER CODE END 1 */
 
@@ -189,12 +209,14 @@ int main(void)
   }
 
   HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_SET);
-  printf("init\n");
-  EPD_1IN54_V2_Init();
-  printf("clear\n");
-  EPD_1IN54_V2_Clear();
-  printf("display\n");
-  EPD_1IN54_V2_Display(gImage);
+  printf("init %ld ms\n", rtc_get_ms());
+  EPD_1IN54_V2_Init();          /* 448 ms */
+  printf("clear %ld ms\n", rtc_get_ms());
+  EPD_1IN54_V2_Clear();         /* 2256 ms */
+  printf("display %ld ms\n", rtc_get_ms());
+  EPD_1IN54_V2_Display(gImage); /* 2040 ms */
+  printf("display done %ld ms\n", rtc_get_ms());
+
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
@@ -207,6 +229,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (HAL_ADC_Start(&hadc1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+    HAL_Delay(1500);
+    HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
+    HAL_Delay(1500);
+    printf("loop %ld ms\n", rtc_get_ms());
+    HAL_ADC_PollForConversion(&hadc1, 10000);
+    adc_val = HAL_ADC_GetValue(&hadc1);
+    printf("adc %ld %ld cV %ld ms\n", adc_val, (adc_val * 330) / 4095,rtc_get_ms());
+    HAL_ADC_Stop(&hadc1);
   }
   /* USER CODE END 3 */
 }
@@ -297,7 +332,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_VBAT;
+  sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -700,8 +735,13 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  printf("error handler\n");
   while (1)
   {
+	  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+	  HAL_Delay(300);
+	  HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+	  HAL_Delay(300);
   }
   /* USER CODE END Error_Handler_Debug */
 }
