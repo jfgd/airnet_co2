@@ -1,0 +1,3 @@
+[submodule "embedded-i2c-stcc4"]
+	path = embedded-i2c-stcc4
+	url = https://github.com/Sensirion/embedded-i2c-stcc4.git
