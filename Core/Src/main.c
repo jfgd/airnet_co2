@@ -64,6 +64,10 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
+volatile uint32_t g_ts_ms_last_button_pressed = 0;
+volatile uint32_t g_ts_ms_previous_button_pressed = 0;
+volatile int g_button_pressed_flag = 0;
+
 uint8_t gImage[5000];
 
 /* USER CODE END PV */
@@ -139,6 +143,16 @@ uint32_t rtc_ticks_to_ms(uint32_t ticks)
 uint32_t rtc_get_ms(void)
 {
   return rtc_ticks_to_ms(rtc_get_tick());
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == BUTTON_Pin) {
+    g_ts_ms_previous_button_pressed = g_ts_ms_last_button_pressed;
+    g_ts_ms_last_button_pressed = rtc_get_ms();
+    g_button_pressed_flag = 1;
+    printf("button pressed %ld %ld\n", g_ts_ms_last_button_pressed, g_ts_ms_previous_button_pressed);
+  }
 }
 
 void DEV_SPI_WriteByte(UBYTE value)
@@ -744,11 +758,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EPD_BUSY_Pin nPGOOD_Pin BUTTON_Pin */
-  GPIO_InitStruct.Pin = EPD_BUSY_Pin|nPGOOD_Pin|BUTTON_Pin;
+  /*Configure GPIO pins : EPD_BUSY_Pin nPGOOD_Pin */
+  GPIO_InitStruct.Pin = EPD_BUSY_Pin|nPGOOD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BUTTON_Pin */
+  GPIO_InitStruct.Pin = BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
