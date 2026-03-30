@@ -23,6 +23,10 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 
+#include "stcc4_i2c.h"
+#include "sensirion_i2c_hal.h"
+#include "sensirion_common.h"
+
 #include "EPD_1in54_V2.h"
 #include "GUI_Paint.h"
 
@@ -157,6 +161,13 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   uint32_t adc_val;
+  uint16_t co2_ppm;
+  uint32_t temperature;
+  uint32_t humidity;
+  int16_t co2_concentration_raw = 0;
+  uint16_t temperature_raw = 0;
+  uint16_t relative_humidity_raw = 0;
+  uint16_t sensor_status_raw = 0;
 
   /* USER CODE END 1 */
 
@@ -190,6 +201,17 @@ int main(void)
 
   printf("Hello from AirNet CO2\n");
 
+  stcc4_init(STCC4_I2C_ADDR_64);
+
+  if (stcc4_stop_continuous_measurement() != NO_ERROR) {
+    printf("error executing stop_continuous_measurement()\n");
+    Error_Handler();
+  }
+
+  if (stcc4_start_continuous_measurement() != NO_ERROR) {
+    printf("error executing start_continuous_measurement()\n");
+    Error_Handler();
+  }
 
   Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
   Paint_SelectImage(gImage);
@@ -233,10 +255,21 @@ int main(void)
     {
       Error_Handler();
     }
+
+    stcc4_read_measurement_raw(
+      &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
+      &sensor_status_raw);
+    co2_ppm = co2_concentration_raw;
+    temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500;
+    humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
+    printf("sensor: co2 is %02dppm.\n", co2_ppm);
+    printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
+    printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
+
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-    HAL_Delay(1500);
+    HAL_Delay(2500);
     HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
-    HAL_Delay(1500);
+    HAL_Delay(2000);
     printf("loop %ld ms\n", rtc_get_ms());
     HAL_ADC_PollForConversion(&hadc1, 10000);
     adc_val = HAL_ADC_GetValue(&hadc1);
@@ -738,10 +771,10 @@ void Error_Handler(void)
   printf("error handler\n");
   while (1)
   {
-	  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-	  HAL_Delay(300);
-	  HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-	  HAL_Delay(300);
+    led_red_on();
+    HAL_Delay(300);
+    led_red_off();
+    HAL_Delay(300);
   }
   /* USER CODE END Error_Handler_Debug */
 }

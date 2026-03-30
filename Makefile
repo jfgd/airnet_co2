@@ -69,6 +69,8 @@ Core/Src/system_stm32u0xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c
 
+C_SOURCES += Core/Src/sensirion_i2c_hal.c embedded-i2c-stcc4/sensirion_common.c embedded-i2c-stcc4/sensirion_i2c.c embedded-i2c-stcc4/stcc4_i2c.c
+
 C_SOURCES += Drivers/EPD/EPD_1in54_V2.c Drivers/EPD/GUI_Paint.c
 C_SOURCES += Drivers/EPD/Fonts/font12.c Drivers/EPD/Fonts/font20.c
 
@@ -141,6 +143,7 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32U0xx/Include \
 -IDrivers/CMSIS/Include
 
+C_INCLUDES += -Iembedded-i2c-stcc4/
 C_INCLUDES += -IDrivers/EPD
 
 # compile gcc flags
