@@ -164,6 +164,21 @@ void DEV_SPI_WriteByte(UBYTE value)
   }
 }
 
+void led_roll(int per_led_delay_ms, int iterations)
+{
+  for (int i = 0 ; i < iterations ; i++) {
+    led_red_on();
+    HAL_Delay(per_led_delay_ms);
+    led_green_on();
+    led_red_off();
+    HAL_Delay(per_led_delay_ms);
+    led_yellow_on();
+    led_green_off();
+    HAL_Delay(per_led_delay_ms);
+    led_yellow_off();
+  }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -213,7 +228,8 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  printf("Hello from AirNet CO2\n");
+  led_roll(100, 1);
+  printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 
   stcc4_init(STCC4_I2C_ADDR_64);
 
@@ -226,23 +242,12 @@ int main(void)
     printf("error executing start_continuous_measurement()\n");
     Error_Handler();
   }
+  printf("STCC4 init done %ld ms\n", rtc_get_ms());
 
   Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
   Paint_SelectImage(gImage);
   Paint_Clear(WHITE);
   Paint_DrawString_EN(50, 85, VERSION, &Font20, BLACK, WHITE);
-
-  for (int i = 0 ; i < 3 ; i++) {
-    led_red_on();
-    HAL_Delay(200);
-    led_green_on();
-    led_red_off();
-    HAL_Delay(200);
-    led_yellow_on();
-    led_green_off();
-    HAL_Delay(200);
-    led_yellow_off();
-  }
 
   HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_SET);
   printf("init %ld ms\n", rtc_get_ms());
@@ -250,7 +255,11 @@ int main(void)
   printf("clear %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_Clear();         /* 2256 ms */
   printf("display %ld ms\n", rtc_get_ms());
-  EPD_1IN54_V2_Display(gImage); /* 2040 ms */
+  EPD_1IN54_V2_DisplayAsync(gImage); /* 216 ms*/  /* 2040 ms */
+  printf("display async done %ld ms\n", rtc_get_ms());
+  led_roll(150, 3);
+  printf("led done %ld ms\n", rtc_get_ms());
+  EPD_1IN54_V2_ReadBusy();      /* 1824ms */
   printf("display done %ld ms\n", rtc_get_ms());
 
 
@@ -260,6 +269,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  printf("\n\n");
   while (1)
   {
     /* USER CODE END WHILE */
