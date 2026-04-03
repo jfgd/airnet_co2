@@ -122,7 +122,7 @@ static void EPD_1IN54_V2_SendData(UBYTE Data)
 function :	Wait until the busy_pin goes LOW
 parameter:
 ******************************************************************************/
-static void EPD_1IN54_V2_ReadBusy(void)
+void EPD_1IN54_V2_ReadBusy(void)
 {
     Debug("e-Paper busy\r\n");
     while(DEV_Digital_Read(EPD_BUSY_PIN) == 1) {      //LOW: idle, HIGH: busy
@@ -153,6 +153,28 @@ static void EPD_1IN54_V2_TurnOnDisplayPart(void)
     EPD_1IN54_V2_SendData(0xcF);
     EPD_1IN54_V2_SendCommand(0x20);
     EPD_1IN54_V2_ReadBusy();
+}
+
+/******************************************************************************
+function :	Turn On Display full Async
+parameter:
+******************************************************************************/
+static void EPD_1IN54_V2_TurnOnDisplayAsync(void)
+{
+    EPD_1IN54_V2_SendCommand(0x22);
+    EPD_1IN54_V2_SendData(0xc7);
+    EPD_1IN54_V2_SendCommand(0x20);
+}
+
+/******************************************************************************
+function :	Turn On Display part
+parameter:
+******************************************************************************/
+static void EPD_1IN54_V2_TurnOnDisplayPartAsync(void)
+{
+    EPD_1IN54_V2_SendCommand(0x22);
+    EPD_1IN54_V2_SendData(0xcF);
+    EPD_1IN54_V2_SendCommand(0x20);
 }
 
 static void EPD_1IN54_V2_Lut(UBYTE *lut)
@@ -300,10 +322,10 @@ void EPD_1IN54_V2_Clear(void)
 }
 
 /******************************************************************************
-function :	Sends the image buffer in RAM to e-Paper and displays
+function :	Sends the image buffer in RAM to e-Paper and displays async
 parameter:
 ******************************************************************************/
-void EPD_1IN54_V2_Display(UBYTE *Image)
+void EPD_1IN54_V2_DisplayAsync(UBYTE *Image)
 {
     UWORD Width, Height;
     Width = (EPD_1IN54_V2_WIDTH % 8 == 0)? (EPD_1IN54_V2_WIDTH / 8 ): (EPD_1IN54_V2_WIDTH / 8 + 1);
@@ -317,7 +339,17 @@ void EPD_1IN54_V2_Display(UBYTE *Image)
             EPD_1IN54_V2_SendData(Image[Addr]);
         }
     }
-    EPD_1IN54_V2_TurnOnDisplay();
+    EPD_1IN54_V2_TurnOnDisplayAsync();
+}
+
+/******************************************************************************
+function :	Sends the image buffer in RAM to e-Paper and displays
+parameter:
+******************************************************************************/
+void EPD_1IN54_V2_Display(UBYTE *Image)
+{
+    EPD_1IN54_V2_DisplayAsync(Image);
+	EPD_1IN54_V2_ReadBusy();
 }
 
 /******************************************************************************
@@ -350,10 +382,10 @@ void EPD_1IN54_V2_DisplayPartBaseImage(UBYTE *Image)
 }
 
 /******************************************************************************
-function :	Sends the image buffer in RAM to e-Paper and displays
+function :	Sends the image buffer in RAM to e-Paper and displays async
 parameter:
 ******************************************************************************/
-void EPD_1IN54_V2_DisplayPart(UBYTE *Image)
+void EPD_1IN54_V2_DisplayPartAsync(UBYTE *Image)
 {
     UWORD Width, Height;
     Width = (EPD_1IN54_V2_WIDTH % 8 == 0)? (EPD_1IN54_V2_WIDTH / 8 ): (EPD_1IN54_V2_WIDTH / 8 + 1);
@@ -367,7 +399,17 @@ void EPD_1IN54_V2_DisplayPart(UBYTE *Image)
             EPD_1IN54_V2_SendData(Image[Addr]);
         }
     }
-    EPD_1IN54_V2_TurnOnDisplayPart();
+    EPD_1IN54_V2_TurnOnDisplayPartAsync();
+}
+
+/******************************************************************************
+function :	Sends the image buffer in RAM to e-Paper and displays
+parameter:
+******************************************************************************/
+void EPD_1IN54_V2_DisplayPart(UBYTE *Image)
+{
+    EPD_1IN54_V2_DisplayPartAsync(Image);
+	EPD_1IN54_V2_ReadBusy();
 }
 /******************************************************************************
 function :	Enter sleep mode
