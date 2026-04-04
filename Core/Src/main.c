@@ -23,6 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 
+#include "skin.h"
+
 #include "stcc4_i2c.h"
 #include "sensirion_i2c_hal.h"
 #include "sensirion_common.h"
@@ -126,6 +128,16 @@ static inline void led_yellow_off(void)
   HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
 }
 
+static inline void epd_power_on(void)
+{
+  HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_SET);
+}
+
+static inline void epd_power_off(void)
+{
+  HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_RESET);
+}
+
 uint32_t rtc_get_tick(void)
 {
   RTC_TimeTypeDef time;
@@ -190,6 +202,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   uint32_t adc_val;
+  uint32_t ts_ms_sensors_read = 0;
   uint16_t co2_ppm;
   uint32_t temperature;
   uint32_t humidity;
@@ -249,7 +262,7 @@ int main(void)
   Paint_Clear(WHITE);
   Paint_DrawString_EN(50, 85, VERSION, &Font20, BLACK, WHITE);
 
-  HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_SET);
+  epd_power_on();
   printf("init %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_Init();          /* 448 ms */
   printf("clear %ld ms\n", rtc_get_ms());
@@ -263,7 +276,10 @@ int main(void)
   printf("display done %ld ms\n", rtc_get_ms());
 
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  Paint_Clear(WHITE);
+  EPD_1IN54_V2_Init();
+  printf("DisplayPartBaseImage\r\n");
+  EPD_1IN54_V2_DisplayPartBaseImage(gImage);
 
   /* USER CODE END 2 */
 
@@ -275,14 +291,24 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    uint32_t start_ms = rtc_get_ms();
+    if ((start_ms - ts_ms_sensors_read) < 4900) {
+      printf("Looped to soon skip\n");
+      HAL_Delay(200);
+      continue;
+    }
+
+    printf("\n");
     if (HAL_ADC_Start(&hadc1) != HAL_OK)
     {
       Error_Handler();
     }
 
+    /* Read data */
     stcc4_read_measurement_raw(
       &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
       &sensor_status_raw);
+    ts_ms_sensors_read = rtc_get_ms();
     co2_ppm = co2_concentration_raw;
     temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500;
     humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
@@ -290,15 +316,24 @@ int main(void)
     printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
     printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
 
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-    HAL_Delay(2500);
-    HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
-    HAL_Delay(2000);
+    skin_prepare_image(gImage, co2_ppm, temperature, humidity);
+
+    epd_power_on();
+    EPD_1IN54_V2_Init_Partial(); /* Wake up */
+    printf("EPD init partial done %ld ms\n", rtc_get_ms());
+    EPD_1IN54_V2_DisplayPart(gImage);
+    printf("EPD display done %ld ms\n", rtc_get_ms());
+    printf("EPD sleep %ld ms\n", rtc_get_ms());
+    EPD_1IN54_V2_Sleep();
+
     printf("loop %ld ms\n", rtc_get_ms());
     HAL_ADC_PollForConversion(&hadc1, 10000);
     adc_val = HAL_ADC_GetValue(&hadc1);
     printf("adc %ld %ld cV %ld ms\n", adc_val, (adc_val * 330) / 4095,rtc_get_ms());
     HAL_ADC_Stop(&hadc1);
+
+    /* Going to sleep */
+    HAL_PWREx_EnterSTOP1Mode(PWR_STOPENTRY_WFI);
   }
   /* USER CODE END 3 */
 }
