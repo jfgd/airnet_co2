@@ -31,7 +31,7 @@
 void skin_prepare_image(uint8_t *gImage, uint16_t co2_ppm,
                         uint32_t temperature, uint32_t humidity)
 {
-  static int counter = 0;
+  static uint32_t counter = 0;
   char co2_ppm_str[STR_DISP_LEN] = {0};
 
   counter++;
@@ -46,8 +46,9 @@ void skin_prepare_image(uint8_t *gImage, uint16_t co2_ppm,
                       &FontRobotoBold40, BLACK, WHITE);
 
 
-  Paint_ClearWindows(1, 190, 1+Font12.Width*12, 190+Font12.Height, WHITE);
-  Paint_DrawNum(1, 190, counter,
+  printf("counter %ld\n", counter);
+  Paint_ClearWindows(1, 185, 1+Font12.Width*12, 185+Font12.Height, WHITE);
+  Paint_DrawNum(1, 185, counter,
                 &Font12, BLACK, WHITE);
 
 }
