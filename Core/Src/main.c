@@ -167,12 +167,6 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   }
 }
 
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
-{
-  UNUSED(hrtc);
-  printf("rtc handler %ld ms\n", rtc_get_ms());
-}
-
 void DEV_SPI_WriteByte(UBYTE value)
 {
   HAL_StatusTypeDef status;
@@ -345,6 +339,9 @@ int main(void)
     /* Going to sleep */
     /* HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI); */
     HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+    //HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    SystemClock_Config();
+    HAL_ResumeTick();
   }
   /* USER CODE END 3 */
 }
@@ -529,7 +526,7 @@ static void MX_RTC_Init(void)
 
   /** Enable the WakeUp
   */
-  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0) != HAL_OK)
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 5, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0) != HAL_OK)
   {
     Error_Handler();
   }
