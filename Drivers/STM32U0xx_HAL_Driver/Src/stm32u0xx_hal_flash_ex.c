@@ -771,6 +771,7 @@ void HAL_FLASH_OB_GetOEMKeyCRC(uint32_t RDPKeyType, uint32_t *OEMKeyCRC)
   */
 void HAL_FLASHEx_EnableHDPProtection(uint32_t Banks)
 {
+  UNUSED(Banks);
   assert_param(IS_FLASH_BANK(Banks));
 
   MODIFY_REG(FLASH->HDPCR, FLASH_HDPCR_HDP1_ACCDIS, FLASH_HDPCR_HDP1_ACCDIS);

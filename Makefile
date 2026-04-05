@@ -22,7 +22,7 @@ TARGET = airnet_co2_fw
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og -Werror
+OPT = -Og -Wextra -Werror
 
 
 #######################################
