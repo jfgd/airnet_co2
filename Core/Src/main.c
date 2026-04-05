@@ -284,6 +284,7 @@ int main(void)
 
 
   Paint_Clear(WHITE);
+  skin_prepare(gImage);
   EPD_1IN54_V2_Init();
   printf("DisplayPartBaseImage\r\n");
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
@@ -324,7 +325,7 @@ int main(void)
     printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
     printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
 
-    skin_prepare_image(gImage, co2_ppm, temperature, humidity);
+    skin_update(gImage, co2_ppm, temperature, humidity);
 
     epd_power_on();
     EPD_1IN54_V2_Init_Partial(); /* Wake up */
