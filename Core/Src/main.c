@@ -81,10 +81,10 @@ static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -167,6 +167,12 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   }
 }
 
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  UNUSED(hrtc);
+  printf("rtc handler %ld ms\n", rtc_get_ms());
+}
+
 void DEV_SPI_WriteByte(UBYTE value)
 {
   HAL_StatusTypeDef status;
@@ -235,10 +241,10 @@ int main(void)
   MX_I2C1_Init();
   MX_RTC_Init();
   MX_SPI1_Init();
-  MX_USART1_UART_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   led_roll(100, 1);
@@ -274,6 +280,7 @@ int main(void)
   printf("led done %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_ReadBusy();      /* 1824ms */
   printf("display done %ld ms\n", rtc_get_ms());
+  printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
 
   Paint_Clear(WHITE);
@@ -299,6 +306,7 @@ int main(void)
     }
 
     printf("\n");
+    printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
     if (HAL_ADC_Start(&hadc1) != HAL_OK)
     {
       Error_Handler();
@@ -331,9 +339,11 @@ int main(void)
     adc_val = HAL_ADC_GetValue(&hadc1);
     printf("adc %ld %ld cV %ld ms\n", adc_val, (adc_val * 330) / 4095,rtc_get_ms());
     HAL_ADC_Stop(&hadc1);
+    printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
     /* Going to sleep */
-    HAL_PWREx_EnterSTOP1Mode(PWR_STOPENTRY_WFI);
+    /* HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI); */
+    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
   }
   /* USER CODE END 3 */
 }
@@ -518,7 +528,7 @@ static void MX_RTC_Init(void)
 
   /** Enable the WakeUp
   */
-  if (HAL_RTCEx_SetWakeUpTimer(&hrtc, 0, RTC_WAKEUPCLOCK_CK_SPRE_16BITS) != HAL_OK)
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -837,13 +847,13 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  printf("error handler\n");
   while (1)
   {
     led_red_on();
     HAL_Delay(300);
     led_red_off();
     HAL_Delay(300);
+    printf("error handler\n");
   }
   /* USER CODE END Error_Handler_Debug */
 }
