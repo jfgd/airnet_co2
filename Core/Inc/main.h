@@ -83,6 +83,10 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
+#define DEBUG_PRINT 1
+//#define DEBUG_NO_SENSORS 1
+//#define DEBUG_NO_EPD 1
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

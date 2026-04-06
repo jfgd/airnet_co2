@@ -92,11 +92,13 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+#ifdef DEBUG_PRINT
 int __io_putchar(int ch)
 {
   HAL_UART_Transmit(&huart1, (uint8_t *) &ch, 1, 1000);
   return ch;
 }
+#endif  /* DEBUG_PRINT */
 
 static inline void led_red_on(void)
 {
@@ -203,13 +205,15 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t adc_val;
   uint32_t ts_ms_sensors_read = 0;
-  uint16_t co2_ppm;
-  uint32_t temperature;
-  uint32_t humidity;
+  uint16_t co2_ppm = 0;
+  uint32_t temperature = 0;
+  uint32_t humidity = 0;
+#ifndef DEBUG_NO_SENSORS
   int16_t co2_concentration_raw = 0;
   uint16_t temperature_raw = 0;
   uint16_t relative_humidity_raw = 0;
   uint16_t sensor_status_raw = 0;
+#endif    /*  not DEBUG_NO_SENSORS */
 
   /* USER CODE END 1 */
 
@@ -244,6 +248,7 @@ int main(void)
   led_roll(100, 1);
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 
+#ifndef DEBUG_NO_SENSORS
   stcc4_init(STCC4_I2C_ADDR_64);
 
   if (stcc4_stop_continuous_measurement() != NO_ERROR) {
@@ -256,12 +261,14 @@ int main(void)
     Error_Handler();
   }
   printf("STCC4 init done %ld ms\n", rtc_get_ms());
+#endif    /*  not DEBUG_NO_SENSORS */
 
   Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
   Paint_SelectImage(gImage);
   Paint_Clear(WHITE);
   Paint_DrawString_EN(50, 85, VERSION, &Font20, BLACK, WHITE);
 
+#ifndef DEBUG_NO_EPD
   epd_power_on();
   printf("init %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_Init();          /* 448 ms */
@@ -274,14 +281,17 @@ int main(void)
   printf("led done %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_ReadBusy();      /* 1824ms */
   printf("display done %ld ms\n", rtc_get_ms());
+#endif    /*  not DEBUG_NO_EPD */
   printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
 
   Paint_Clear(WHITE);
   skin_prepare(gImage);
+#ifndef DEBUG_NO_EPD
   EPD_1IN54_V2_Init();
   printf("DisplayPartBaseImage\r\n");
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
+#endif    /*  not DEBUG_NO_EPD */
 
   /* USER CODE END 2 */
 
@@ -307,20 +317,24 @@ int main(void)
       Error_Handler();
     }
 
+#ifndef DEBUG_NO_SENSORS
     /* Read data */
     stcc4_read_measurement_raw(
       &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
       &sensor_status_raw);
     ts_ms_sensors_read = rtc_get_ms();
+    /* TODO: handle error */
     co2_ppm = co2_concentration_raw;
     temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500;
     humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
     printf("sensor: co2 is %02dppm.\n", co2_ppm);
     printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
     printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
+#endif    /*  not DEBUG_NO_SENSORS */
 
     skin_update(gImage, co2_ppm, temperature, humidity);
 
+#ifndef DEBUG_NO_EPD
     epd_power_on();
     EPD_1IN54_V2_Init_Partial(); /* Wake up */
     printf("EPD init partial done %ld ms\n", rtc_get_ms());
@@ -328,6 +342,8 @@ int main(void)
     printf("EPD display done %ld ms\n", rtc_get_ms());
     printf("EPD sleep %ld ms\n", rtc_get_ms());
     EPD_1IN54_V2_Sleep();
+    //epd_power_off();
+#endif    /*  not DEBUG_NO_EPD */
 
     printf("loop %ld ms\n", rtc_get_ms());
     HAL_ADC_PollForConversion(&hadc1, 10000);
@@ -746,6 +762,10 @@ static void MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
+
+#ifndef DEBUG_PRINT
+    return;
+#endif  /* not DEBUG_PRINT */
 
   /* USER CODE END USART1_Init 0 */
 

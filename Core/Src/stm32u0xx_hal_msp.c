@@ -501,6 +501,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
   if(huart->Instance==USART1)
   {
     /* USER CODE BEGIN USART1_MspInit 0 */
+#ifndef DEBUG_PRINT
+    return;
+#endif  /* not DEBUG_PRINT */
 
     /* USER CODE END USART1_MspInit 0 */
 
