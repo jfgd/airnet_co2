@@ -189,6 +189,20 @@ void led_roll(int per_led_delay_ms, int iterations)
   }
 }
 
+static void enter_stop2(void)
+{
+  /* TODO: Set GPIO to analog */
+  HAL_SuspendTick();
+  HAL_PWREx_EnableUltraLowPowerMode();
+  HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+
+  /* Stop 2 */
+
+  SystemClock_Config();
+  HAL_ResumeTick();
+  /* TODO: reconfigure GPIO */
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -239,7 +253,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  led_roll(100, 1);
+  led_roll(100, 5);
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 
 #ifndef DEBUG_NO_SENSORS
@@ -286,6 +300,8 @@ int main(void)
   printf("DisplayPartBaseImage\r\n");
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
 #endif    /*  not DEBUG_NO_EPD */
+
+  enter_stop2();
 
   /* USER CODE END 2 */
 
@@ -347,11 +363,8 @@ int main(void)
     printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
     /* Going to sleep */
-    /* HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI); */
-    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-    //HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
-    SystemClock_Config();
-    HAL_ResumeTick();
+    enter_stop2();
+
   }
   /* USER CODE END 3 */
 }
