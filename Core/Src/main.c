@@ -219,6 +219,7 @@ int main(void)
   uint32_t temperature = 0;
   uint32_t humidity = 0;
 #ifndef DEBUG_NO_SENSORS
+  int16_t err = 0;
   int16_t co2_concentration_raw = 0;
   uint16_t temperature_raw = 0;
   uint16_t relative_humidity_raw = 0;
@@ -264,10 +265,6 @@ int main(void)
     Error_Handler();
   }
 
-  if (stcc4_start_continuous_measurement() != NO_ERROR) {
-    printf("error executing start_continuous_measurement()\n");
-    Error_Handler();
-  }
   printf("STCC4 init done %ld ms\n", rtc_get_ms());
 #endif    /*  not DEBUG_NO_SENSORS */
 
@@ -328,12 +325,35 @@ int main(void)
     }
 
 #ifndef DEBUG_NO_SENSORS
+    ts_ms_sensors_read = rtc_get_ms();
     /* Read data */
-    stcc4_read_measurement_raw(
+    err = stcc4_exit_sleep_mode();
+    if (err !=  NO_ERROR) {
+      printf("Error stcc4_exit_sleep_mode\n");
+      Error_Handler();
+    }
+    err = stcc4_measure_single_shot();
+    if (err !=  NO_ERROR) {
+      printf("Error stcc4_measure_single_shot\n");
+    }
+    err = stcc4_read_measurement_raw(
       &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
       &sensor_status_raw);
-    ts_ms_sensors_read = rtc_get_ms();
-    /* TODO: handle error */
+    if (err !=  NO_ERROR) {
+      printf("Error stcc4_read_measurement_raw retrying in 150ms\n");
+      HAL_Delay(150);
+      err = stcc4_read_measurement_raw(
+        &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
+        &sensor_status_raw);
+      if (err !=  NO_ERROR) {
+        printf("Error stcc4_read_measurement_raw\n");
+        Error_Handler();
+      }
+    }
+    err = stcc4_enter_sleep_mode();
+    if (err !=  NO_ERROR) {
+      printf("Error stcc4_enter_sleep_mode\n");
+    }
     co2_ppm = co2_concentration_raw;
     temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500;
     humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
