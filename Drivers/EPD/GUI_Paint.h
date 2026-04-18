@@ -67,6 +67,7 @@
 
 //#include "DEV_Config.h"
 #include "Fonts/fonts.h"
+#include "Fonts/jfonts.h"
 
 #define UBYTE   uint8_t
 #define UWORD   uint16_t
@@ -203,7 +204,11 @@ void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius, UWORD Color,
 
 //Display string
 void Paint_DrawChar(UWORD Xstart, UWORD Ystart, const char Acsii_Char, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
+		     jFont* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
+			jFont* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, int32_t Nummber, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawNumDecimals(UWORD Xpoint, UWORD Ypoint, double Nummber, sFONT* Font, UWORD Digit, UWORD Color_Foreground, UWORD Color_Background); // Able to display decimals

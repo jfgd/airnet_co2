@@ -553,6 +553,77 @@ void Paint_DrawChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
 }
 
 /******************************************************************************
+function: Show English characters using jFont
+parameter:
+    Xpoint           ：X coordinate
+    Ypoint           ：Y coordinate
+    Acsii_Char       ：To display the English characters
+    Font             ：A structure pointer that displays a character size
+    Color_Foreground : Select the foreground color
+    Color_Background : Select the background color
+******************************************************************************/
+void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
+                    jFont* font, UWORD Color_Foreground, UWORD Color_Background)
+{
+    UWORD Page, Column;
+    const unsigned char *ptr = NULL;
+    int glyph_idx = -1;
+    uint16_t height;
+    uint16_t width;
+
+    if (Xpoint > Paint.Width || Ypoint > Paint.Height) {
+        Debug("Paint_DrawChar Input exceeds the normal display range\r\n");
+        return;
+    }
+
+    /* Find glyph index in font */
+    for (int i = 0 ; i < font->nb_glyphs ; i++) {
+        if (font->glyphs[i].c == Acsii_Char) {
+            glyph_idx = i;
+        }
+    }
+
+    if (glyph_idx < 0) {
+        /* If not found use default char */
+        printf("char %d not found\n", Acsii_Char);
+        for (int i = 0 ; i < font->nb_glyphs ; i++) {
+            if (font->glyphs[i].c == font->default_char) {
+                glyph_idx = i;
+            }
+        }
+    }
+
+    ptr = font->glyphs[glyph_idx].table;
+    height = font->height;
+    width = font->glyphs[glyph_idx].width;
+
+    for (Page = 0; Page < height; Page ++ ) {
+        for (Column = 0; Column < width; Column ++ ) {
+
+            //To determine whether the font background color and screen background color is consistent
+            if (FONT_BACKGROUND == Color_Background) { //this process is to speed up the scan
+                if (*ptr & (0x80 >> (Column % 8)))
+                    Paint_SetPixel(Xpoint + Column, Ypoint + Page, Color_Foreground);
+                    // Paint_DrawPoint(Xpoint + Column, Ypoint + Page, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
+            } else {
+                if (*ptr & (0x80 >> (Column % 8))) {
+                    Paint_SetPixel(Xpoint + Column, Ypoint + Page, Color_Foreground);
+                    // Paint_DrawPoint(Xpoint + Column, Ypoint + Page, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
+                } else {
+                    Paint_SetPixel(Xpoint + Column, Ypoint + Page, Color_Background);
+                    // Paint_DrawPoint(Xpoint + Column, Ypoint + Page, Color_Background, DOT_PIXEL_DFT, DOT_STYLE_DFT);
+                }
+            }
+            //One pixel is 8 bits
+            if (Column % 8 == 7)
+                ptr++;
+        }// Write a line
+        if (width % 8 != 0)
+            ptr++;
+    }// Write all
+}
+
+/******************************************************************************
 function:	Display the string
 parameter:
     Xstart           ：X coordinate
@@ -592,6 +663,51 @@ void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString,
 
         //The next word of the abscissa increases the font of the broadband
         Xpoint += Font->Width;
+    }
+}
+
+
+/******************************************************************************
+function:	Display the string using jFont
+parameter:
+    Xstart           ：X coordinate
+    Ystart           ：Y coordinate
+    pString          ：The first address of the English string to be displayed
+    Font             ：A structure pointer that displays a character size
+    Color_Foreground : Select the foreground color
+    Color_Background : Select the background color
+******************************************************************************/
+void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
+                         jFont* font, UWORD Color_Foreground, UWORD Color_Background)
+{
+    UWORD Xpoint = Xstart;
+    UWORD Ypoint = Ystart;
+
+    if (Xstart > Paint.Width || Ystart > Paint.Height) {
+        Debug("Paint_DrawString_EN Input exceeds the normal display range\r\n");
+        return;
+    }
+
+    while (*pString != '\0') {
+        //if X direction filled , reposition to(Xstart,Ypoint),Ypoint is Y direction plus the Height of the character
+        int width = jfont_get_width(font, *pString);
+        if ((Xpoint + width ) > Paint.Width ) {
+            Xpoint = Xstart;
+            Ypoint += font->height;
+        }
+
+        // If the Y direction is full, reposition to(Xstart, Ystart)
+        if ((Ypoint  + font->height ) > Paint.Height ) {
+            Xpoint = Xstart;
+            Ypoint = Ystart;
+        }
+        Paint_DrawjChar(Xpoint, Ypoint, * pString, font, Color_Foreground, Color_Background);
+
+        //The next character of the address
+        pString ++;
+
+        //The next word of the abscissa increases the font of the broadband
+        Xpoint += width;
     }
 }
 
