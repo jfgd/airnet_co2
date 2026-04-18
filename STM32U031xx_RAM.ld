@@ -38,7 +38,7 @@ ENTRY(Reset_Handler)
 /* Memories definition */
 MEMORY
 {
-  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 8K
+  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 12K
 }
 /* Highest address of the user mode stack */
 _estack = ORIGIN(RAM) + LENGTH(RAM); /* end of "RAM" Ram type memory */
