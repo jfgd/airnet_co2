@@ -165,6 +165,15 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   }
 }
 
+void draw_logo(uint8_t *image) {
+  UNUSED(image);
+  int y_pos = 50;
+  Paint_DrawString_j(4, y_pos, "AirNet", &Airnet40NotoSansSemiCondensedBoldItalic,
+                     -3, BLACK, WHITE);
+  Paint_DrawString_j(111, y_pos-7, "CO²", &CO253NotoSansExtraBold,
+                     -2, BLACK, WHITE);
+}
+
 void DEV_SPI_WriteByte(UBYTE value)
 {
   HAL_StatusTypeDef status;
@@ -281,14 +290,15 @@ int main(void)
   Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
   Paint_SelectImage(gImage);
   Paint_Clear(WHITE);
-  Paint_DrawString_EN(50, 85, VERSION, &Font12, BLACK, WHITE);
+  draw_logo(gImage);
+  Paint_DrawString_EN(50, 130, VERSION, &Font12, BLACK, WHITE);
 
 #ifndef DEBUG_NO_EPD
   epd_power_on();
   printf("init %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_Init();          /* 448 ms */
-  printf("clear %ld ms\n", rtc_get_ms());
-  EPD_1IN54_V2_Clear();         /* 2256 ms */
+  /* printf("clear %ld ms\n", rtc_get_ms()); */
+  /* EPD_1IN54_V2_Clear();         /\* 2256 ms *\/ */
   printf("display %ld ms\n", rtc_get_ms());
   uint32_t ts_disp_start_init = rtc_get_ms();
   EPD_1IN54_V2_DisplayAsync(gImage); /* 216 ms*/  /* 2040 ms */
@@ -301,7 +311,6 @@ int main(void)
 	 rtc_get_ms() - ts_disp_start_init);
 #endif    /*  not DEBUG_NO_EPD */
   printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
-
 
   Paint_Clear(WHITE);
   skin_prepare(gImage);
@@ -372,7 +381,7 @@ int main(void)
       printf("Error stcc4_enter_sleep_mode\n");
     }
     co2_ppm = co2_concentration_raw;
-    temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500;
+    temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500; /* in c°C */
     humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
     printf("sensor: co2 is %02dppm.\n", co2_ppm);
     printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);

@@ -55,5 +55,7 @@ static inline int jfont_get_width(jFont *font, char c)
 extern jFont Digits25NotoSansSemiCondensedBold;
 extern jFont Digits50NotoSansSemiCondensedBold;
 extern jFont Digits90NotoSansSemiCondensedBold;
+extern jFont Airnet40NotoSansSemiCondensedBoldItalic;
+extern jFont CO253NotoSansExtraBold;
 
 #endif /* __JFONTS_H */
