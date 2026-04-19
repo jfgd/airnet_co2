@@ -57,5 +57,6 @@ extern jFont Digits50NotoSansSemiCondensedBold;
 extern jFont Digits90NotoSansSemiCondensedBold;
 extern jFont Airnet40NotoSansSemiCondensedBoldItalic;
 extern jFont CO253NotoSansExtraBold;
+extern jFont CO2ppm25NotoSansMedium;
 
 #endif /* __JFONTS_H */

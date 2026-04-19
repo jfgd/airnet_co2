@@ -80,6 +80,7 @@ C_SOURCES += Drivers/EPD/Fonts/Digits50NotoSansSemiCondensedBold.c
 C_SOURCES += Drivers/EPD/Fonts/Digits90NotoSansSemiCondensedBold.c
 C_SOURCES += Drivers/EPD/Fonts/Airnet40NotoSansSemiCondensedBoldItalic.c
 C_SOURCES += Drivers/EPD/Fonts/CO253NotoSansExtraBold.c
+C_SOURCES += Drivers/EPD/Fonts/CO2ppm25NotoSansMedium.c
 
 # ASM sources
 ASM_SOURCES =  \
