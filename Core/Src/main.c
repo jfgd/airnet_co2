@@ -227,7 +227,6 @@ int main(void)
   uint16_t co2_ppm = 0;
   uint32_t temperature = 0;
   uint32_t humidity = 0;
-#ifndef DEBUG_NO_SENSORS
   int16_t err = 0;
   uint32_t stcc4_product_id;
   uint64_t stcc4_sn;
@@ -236,7 +235,6 @@ int main(void)
   uint16_t temperature_raw = 0;
   uint16_t relative_humidity_raw = 0;
   uint16_t sensor_status_raw = 0;
-#endif    /*  not DEBUG_NO_SENSORS */
 
   /* USER CODE END 1 */
 
@@ -269,7 +267,6 @@ int main(void)
   led_roll(100, 5);
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 
-#ifndef DEBUG_NO_SENSORS
   stcc4_init(STCC4_I2C_ADDR_64);
 
   if (stcc4_stop_continuous_measurement() != NO_ERROR) {
@@ -279,13 +276,14 @@ int main(void)
 
   err = stcc4_get_product_id(&stcc4_product_id, &stcc4_sn);
   if (err != NO_ERROR) {
+#ifndef DEBUG_NO_SENSORS
     printf("error reading stcc4 product_id\n");
     Error_Handler();
+#endif    /*  not DEBUG_NO_SENSORS */
   }
   printf("stcc4 pid 0x%lx 0x%lx\n", stcc4_product_id, (uint32_t)stcc4_sn);
 
   printf("STCC4 init done %ld ms\n", rtc_get_ms());
-#endif    /*  not DEBUG_NO_SENSORS */
 
   Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
   Paint_SelectImage(gImage);
@@ -346,7 +344,6 @@ int main(void)
       Error_Handler();
     }
 
-#ifndef DEBUG_NO_SENSORS
     ts_ms_sensors_read = rtc_get_ms();
     /* Read data */
     printf("CALL stcc4_exit_sleep_mode\n");
@@ -366,6 +363,7 @@ int main(void)
       &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
       &sensor_status_raw);
     if (err != NO_ERROR) {
+#ifndef DEBUG_NO_SENSORS
       printf("Error stcc4_read_measurement_raw retrying in 150ms\n");
       HAL_Delay(150);
       err = stcc4_read_measurement_raw(
@@ -375,6 +373,7 @@ int main(void)
         printf("Error stcc4_read_measurement_raw\n");
         Error_Handler();
       }
+#endif    /*  not DEBUG_NO_SENSORS */
     }
     err = stcc4_enter_sleep_mode();
     if (err != NO_ERROR) {
@@ -386,7 +385,6 @@ int main(void)
     printf("sensor: co2 is %02dppm.\n", co2_ppm);
     printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
     printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
-#endif    /*  not DEBUG_NO_SENSORS */
 
     printf("loop %ld ms\n", rtc_get_ms());
     HAL_ADC_PollForConversion(&hadc1, 10000);
@@ -527,6 +525,16 @@ static void MX_I2C1_Init(void)
 {
 
   /* USER CODE BEGIN I2C1_Init 0 */
+
+#ifdef DEBUG_NO_SENSORS
+  /* Put I2C pin in analog to save power */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  return;
+#endif /* DEBUG_NO_SENSORS */
 
   /* USER CODE END I2C1_Init 0 */
 

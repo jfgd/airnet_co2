@@ -30,6 +30,7 @@
  */
 
 #include <stdio.h>
+#include "main.h"
 #include "stm32u0xx_hal.h"
 
 #include "sensirion_common.h"
@@ -66,8 +67,15 @@ void sensirion_i2c_hal_free(void) {
  * @returns 0 on success, error code otherwise
  */
 int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t* data, uint8_t count) {
+#ifndef DEBUG_NO_SENSORS
     return (int8_t)HAL_I2C_Master_Receive(&hi2c1, (uint16_t)(address << 1),
                                           data, count, 1000000);
+#else
+    UNUSED(address);
+    UNUSED(data);
+    UNUSED(count);
+    return 0;
+#endif    /*  not DEBUG_NO_SENSORS */
 }
 
 /**
@@ -83,15 +91,22 @@ int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t* data, uint8_t count) {
  */
 int8_t sensirion_i2c_hal_write(uint8_t address, const uint8_t* data,
                                uint8_t count) {
+#ifndef DEBUG_NO_SENSORS
     HAL_StatusTypeDef status;
     status = HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)(address << 1),
 				     (uint8_t*)data, count, 1000000);
 
     if (status != HAL_OK) {
-	    printf("Error HAL_I2C_Master_Transmit status %d\n", status);
+	    printf("Error HAL_I2C_Master_Transmit status %d (0x%x 0x%x %d)\n", status, address, *data, count);
     }
 
     return (int8_t)status;
+#else
+    UNUSED(address);
+    UNUSED(data);
+    UNUSED(count);
+    return 0;
+#endif    /*  not DEBUG_NO_SENSORS */
 }
 
 /**
