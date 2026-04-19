@@ -31,7 +31,6 @@ typedef struct _font
 	struct glyph {
 		char c;
 		uint16_t width;
-		uint8_t format;
 		const uint8_t *table;
 	} glyphs[];
 } jFont;
@@ -53,7 +52,8 @@ static inline int jfont_get_width(jFont *font, char c)
 }
 
 
-extern jFont Digits40NotoSansSemiCondensedBold;
-extern jFont Digits70NotoSansSemiCondensedBold;
+extern jFont Digits25NotoSansSemiCondensedBold;
+extern jFont Digits50NotoSansSemiCondensedBold;
+extern jFont Digits90NotoSansSemiCondensedBold;
 
 #endif /* __JFONTS_H */

@@ -44,38 +44,53 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
   char humidity_str[STR_DISP_LEN] = {0};
   char vbat_mv_str[STR_DISP_LEN] = {0};
 
+  if (co2_ppm > 10000) {
+    co2_ppm = 9999;
+  }
+  if (temperature > 10000) {
+    temperature = 9999;
+  }
+  if (humidity > 100) {
+    humidity = 99;
+  }
+
   counter++;
 
-  snprintf(temperature_str1, STR_DISP_LEN, "%ld.%ld C", temperature / 100,
-           (temperature - ((temperature / 100)*100))/10);
-  snprintf(temperature_str2, STR_DISP_LEN, "%ld.%ld C", temperature / 100,
-           (temperature - ((temperature / 100)*100))/10);
+  snprintf(temperature_str1, STR_DISP_LEN, "%ld", temperature / 100);
+  snprintf(temperature_str2, STR_DISP_LEN, ".%ld", (temperature - ((temperature / 100)*100))/10);
 #define XSTART_TEMP 2
 #define YSTART_TEMP 0
   Paint_ClearWindows(XSTART_TEMP, YSTART_TEMP,
-                     XSTART_TEMP + Digits40NotoSansSemiCondensedBold.max_width * 8,
-                     YSTART_TEMP + Digits40NotoSansSemiCondensedBold.height, WHITE);
-    Paint_DrawString_j(XSTART_TEMP, YSTART_TEMP, temperature_str1,
-                      &Digits40NotoSansSemiCondensedBold, BLACK, WHITE);
+                     XSTART_TEMP + Digits50NotoSansSemiCondensedBold.max_width * 8,
+                     YSTART_TEMP + Digits50NotoSansSemiCondensedBold.height, WHITE);
+  Paint_DrawString_j(XSTART_TEMP, YSTART_TEMP, temperature_str1,
+                     &Digits50NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+  Paint_DrawString_j(XSTART_TEMP+(2*24), YSTART_TEMP+20, temperature_str2,
+                     &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+  Paint_DrawString_j(XSTART_TEMP+(2*24), YSTART_TEMP+2, "°C",
+                     &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
   snprintf(humidity_str, STR_DISP_LEN, "%ld %%", humidity);
-#define XSTART_HUMI 120
+#define XSTART_HUMI 102
 #define YSTART_HUMI 0
   Paint_ClearWindows(XSTART_HUMI, YSTART_HUMI,
-                     XSTART_HUMI + Digits40NotoSansSemiCondensedBold.max_width * 2,
-                     YSTART_HUMI + Digits40NotoSansSemiCondensedBold.height, WHITE);
+                     XSTART_HUMI + Digits50NotoSansSemiCondensedBold.max_width * 2,
+                     YSTART_HUMI + Digits50NotoSansSemiCondensedBold.height, WHITE);
   Paint_DrawString_j(XSTART_HUMI, YSTART_HUMI, humidity_str,
-                      &Digits40NotoSansSemiCondensedBold, BLACK, WHITE);
+                     &Digits50NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
   snprintf(co2_ppm_str, STR_DISP_LEN, "%02d", co2_ppm);
-#define XSTART_CO2_PPM 10
-#define YSTART_CO2_PPM 60
+#define XSTART_CO2_PPM 8
+#define YSTART_CO2_PPM 55
   Paint_ClearWindows(XSTART_CO2_PPM, YSTART_CO2_PPM,
-                     XSTART_CO2_PPM + Digits70NotoSansSemiCondensedBold.max_width * 4,
-                     YSTART_CO2_PPM + Digits70NotoSansSemiCondensedBold.height, WHITE);
-  Paint_DrawString_j(XSTART_CO2_PPM, YSTART_CO2_PPM, co2_ppm_str,
-                      &Digits70NotoSansSemiCondensedBold, BLACK, WHITE);
-
+                     XSTART_CO2_PPM + Digits90NotoSansSemiCondensedBold.max_width * 4,
+                     YSTART_CO2_PPM + Digits90NotoSansSemiCondensedBold.height, WHITE);
+  int xstart = XSTART_CO2_PPM;
+  if (co2_ppm < 1000) {
+    xstart = 31;                /* Center */
+  }
+  Paint_DrawString_j(xstart, YSTART_CO2_PPM, co2_ppm_str,
+                     &Digits90NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
   printf("counter %ld\n", counter);
   Paint_ClearWindows(1, 185, 1+Font12.Width*12, 185+Font12.Height, WHITE);
