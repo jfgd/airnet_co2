@@ -678,7 +678,7 @@ parameter:
     Color_Background : Select the background color
 ******************************************************************************/
 void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
-                         jFont* font, UWORD Color_Foreground, UWORD Color_Background)
+                        jFont* font, int kerning, UWORD Color_Foreground, UWORD Color_Background)
 {
     UWORD Xpoint = Xstart;
     UWORD Ypoint = Ystart;
@@ -700,6 +700,10 @@ void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
         if ((Ypoint  + font->height ) > Paint.Height ) {
             Xpoint = Xstart;
             Ypoint = Ystart;
+        }
+        if (Xpoint != Xstart) {
+            /* global constant kerning */
+            Xpoint += kerning;
         }
         Paint_DrawjChar(Xpoint, Ypoint, * pString, font, Color_Foreground, Color_Background);
 

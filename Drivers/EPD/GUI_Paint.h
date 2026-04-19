@@ -208,7 +208,7 @@ void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
 		     jFont* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
-			jFont* font, UWORD Color_Foreground, UWORD Color_Background);
+			jFont* font, int kerning, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, int32_t Nummber, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawNumDecimals(UWORD Xpoint, UWORD Ypoint, double Nummber, sFONT* Font, UWORD Digit, UWORD Color_Foreground, UWORD Color_Background); // Able to display decimals
