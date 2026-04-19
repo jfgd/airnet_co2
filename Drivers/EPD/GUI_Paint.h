@@ -204,7 +204,7 @@ void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius, UWORD Color,
 
 //Display string
 void Paint_DrawChar(UWORD Xstart, UWORD Ystart, const char Acsii_Char, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
-void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
+void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const uint32_t Acsii_Char,
 		     jFont* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,

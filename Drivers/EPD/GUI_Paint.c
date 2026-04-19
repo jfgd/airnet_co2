@@ -562,7 +562,7 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
+void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const uint32_t Acsii_Char,
                     jFont* font, UWORD Color_Foreground, UWORD Color_Background)
 {
     UWORD Page, Column;
@@ -585,7 +585,7 @@ void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
 
     if (glyph_idx < 0) {
         /* If not found use default char */
-        printf("char %d not found\n", Acsii_Char);
+        Debug("char %ld not found\n", Acsii_Char);
         for (int i = 0 ; i < font->nb_glyphs ; i++) {
             if (font->glyphs[i].c == font->default_char) {
                 glyph_idx = i;
@@ -682,6 +682,8 @@ void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
 {
     UWORD Xpoint = Xstart;
     UWORD Ypoint = Ystart;
+    uint32_t c = 0;                 /* UTF-8 char */
+    int utf8_shift = 0;
 
     if (Xstart > Paint.Width || Ystart > Paint.Height) {
         Debug("Paint_DrawString_EN Input exceeds the normal display range\r\n");
@@ -689,8 +691,41 @@ void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
     }
 
     while (*pString != '\0') {
+        Debug("*pString: %d 0x%x\n", *pString, *pString);
+        if ((*pString & 0xC0) == 0xC0) {
+            /* UTF-8 first byte*/
+            c = 0;
+            if ((*pString & 0x30) == 0x30) {
+                /* 4 bytes */
+                utf8_shift = 2;
+                c = (*pString & 0x7) << 20;
+            } else if ((*pString & 0x30) == 0x20) {
+                /* 3 bytes */
+                utf8_shift = 1;
+                c = (*pString & 0xf) << 12;
+            }  else if ((*pString & 0x20) == 0x0) {
+                /* 2 bytes */
+                utf8_shift = 0;
+                c = (*pString & 0x1f) << 6;
+                Debug("c 2 bytes: %ld 0x%lx (0x%x)\n", c, c, *pString);
+            }
+            pString++;
+            continue;
+        } else if ((*pString & 0xC0) == 0x80) {
+            c |= (*pString & 0x3f) << (6 * utf8_shift);
+            Debug("c last: %ld 0x%lx (0x%x)\n", c, c, *pString);
+            if (utf8_shift > 0) {
+                pString++;
+                utf8_shift--;
+                continue;
+            }
+        } else {
+            /* Pure ASCII */
+            c = *pString;
+        }
+
         //if X direction filled , reposition to(Xstart,Ypoint),Ypoint is Y direction plus the Height of the character
-        int width = jfont_get_width(font, *pString);
+        int width = jfont_get_width(font, c);
         if ((Xpoint + width ) > Paint.Width ) {
             Xpoint = Xstart;
             Ypoint += font->height;
@@ -705,7 +740,8 @@ void Paint_DrawString_j(UWORD Xstart, UWORD Ystart, const char * pString,
             /* global constant kerning */
             Xpoint += kerning;
         }
-        Paint_DrawjChar(Xpoint, Ypoint, * pString, font, Color_Foreground, Color_Background);
+        Debug("%p: %ld 0x%lx (%d 0x%x)\n", pString, c, c, *pString, *pString);
+        Paint_DrawjChar(Xpoint, Ypoint, c, font, Color_Foreground, Color_Background);
 
         //The next character of the address
         pString ++;
