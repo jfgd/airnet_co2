@@ -1865,7 +1865,7 @@ static const uint8_t fontTable57[] =
 
 jFont Digits90NotoSansSemiCondensedBold = {
 	.max_width = 46, /* Maximum width */
-	.height = 90, /* Height */
+	.height = 85, /* Height, XXX: removed 5px (from 90 to 85) */
 	.default_char = 48, /* Default: '0' */
 	.min_char = 48, /* Min: '0' */
 	.max_char = 57, /* Max: '9' */
