@@ -29,7 +29,7 @@
 #define STR_DISP_LEN 16
 
 
-#define XSTART_TEMP 2
+#define XSTART_TEMP 25
 #define YSTART_TEMP 0
 #define XSTART_HUMI 122
 #define YSTART_HUMI 0
@@ -40,6 +40,8 @@ void skin_prepare(uint8_t *image)
 {
   UNUSED(image);
   Paint_Clear(WHITE);
+
+  Paint_DrawjChar(2, YSTART_TEMP, 'T', &Thermometer50, BLACK, WHITE);
 
   Paint_DrawString_j(XSTART_TEMP+(2*24), YSTART_TEMP+2, "°C",
                      &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
