@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include "skin.h"
+#include "menu.h"
 
 #include "stcc4_i2c.h"
 #include "sensirion_i2c_hal.h"
@@ -328,6 +329,24 @@ int main(void)
   printf("\n\n");
   while (1)
   {
+    int long_press = 0;
+    if (g_button_pressed_flag) {
+      uint32_t press_time_ms = 0;
+      g_button_pressed_flag = 0;
+      while (BUTTON_GPIO_STATE() == 0) {
+        press_time_ms = rtc_get_ms() - g_ts_ms_last_button_pressed;
+        if (press_time_ms > 800) {
+          long_press = 1;
+          printf("Long press button %ld\n", press_time_ms);
+          break;
+        }
+        HAL_Delay(10);
+      }
+    }
+    if (long_press) {
+      menu_enter();
+      continue;
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -83,6 +83,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
+#define BUTTON_GPIO_STATE() HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin)
+
 #define DEBUG_PRINT 1
 // #define DEBUG_NO_SENSORS 1
 // #define DEBUG_NO_EPD 1

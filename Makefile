@@ -70,11 +70,13 @@ Core/Src/sysmem.c \
 Core/Src/syscalls.c
 
 C_SOURCES += Core/Src/skin.c
+C_SOURCES += Core/Src/menu.c
 
 C_SOURCES += Core/Src/sensirion_i2c_hal.c embedded-i2c-stcc4/sensirion_common.c embedded-i2c-stcc4/sensirion_i2c.c embedded-i2c-stcc4/stcc4_i2c.c
 
 C_SOURCES += Drivers/EPD/EPD_1in54_V2.c Drivers/EPD/GUI_Paint.c
 C_SOURCES += Drivers/EPD/Fonts/font12.c
+C_SOURCES += Drivers/EPD/Fonts/font20.c
 C_SOURCES += Drivers/EPD/Fonts/Digits25NotoSansSemiCondensedBold.c
 C_SOURCES += Drivers/EPD/Fonts/Digits50NotoSansSemiCondensedBold.c
 C_SOURCES += Drivers/EPD/Fonts/Digits90NotoSansSemiCondensedBold.c
