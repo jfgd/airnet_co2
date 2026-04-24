@@ -55,8 +55,13 @@
 #define EPD_CS_PIN      SPI_CS_GPIO_Port, SPI_CS_Pin
 #define EPD_BUSY_PIN    BUSY_GPIO_Port, BUSY_Pin
 
+#ifndef DEBUG_NO_EPD
 #define DEV_Digital_Write(_pin, _value) HAL_GPIO_WritePin(_pin, _value == 0? GPIO_PIN_RESET:GPIO_PIN_SET)
 #define DEV_Digital_Read(_pin) HAL_GPIO_ReadPin(_pin)
+#else
+#define DEV_Digital_Write(_pin, _value)
+#define DEV_Digital_Read(_pin) (0)
+#endif /* not DEBUG_NO_EPD */
 #define DEV_Delay_ms(__xms) HAL_Delay(__xms);
 
 // Display resolution

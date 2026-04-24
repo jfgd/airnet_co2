@@ -129,12 +129,16 @@ static inline void led_yellow_off(void)
 
 static inline void epd_power_on(void)
 {
+#ifndef DEBUG_NO_EPD
   HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_SET);
+#endif  /* not DEBUG_NO_EPD */
 }
 
 static inline void epd_power_off(void)
 {
+#ifndef DEBUG_NO_EPD
   HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_RESET);
+#endif  /* not DEBUG_NO_EPD */
 }
 
 uint32_t rtc_get_tick(void)
@@ -177,11 +181,15 @@ void draw_logo(uint8_t *image) {
 
 void DEV_SPI_WriteByte(UBYTE value)
 {
+#ifndef DEBUG_NO_EPD
   HAL_StatusTypeDef status;
   status = HAL_SPI_Transmit(&hspi1, &value, 1, 1000);
   if (status != HAL_OK) {
     printf("Error DEV_SPI_WriteByte HAL_SPI_Transmit %d\n", status);
   }
+#else
+  UNUSED(value);
+#endif  /* not DEBUG_NO_EPD */
 }
 
 void led_roll(int per_led_delay_ms, int iterations)
@@ -293,7 +301,6 @@ int main(void)
   Paint_DrawString_j((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*font12.max_width)/2,
 		     130, VERSION, &font12, 0, BLACK, WHITE);
 
-#ifndef DEBUG_NO_EPD
   epd_power_on();
   printf("init %ld ms\n", rtc_get_ms());
   EPD_1IN54_V2_Init();          /* 448 ms */
@@ -309,16 +316,14 @@ int main(void)
   EPD_1IN54_V2_ReadBusy();      /* 1824ms */
   printf("display done %ld ms (%ld ms)\n", rtc_get_ms(),
 	 rtc_get_ms() - ts_disp_start_init);
-#endif    /*  not DEBUG_NO_EPD */
   printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
   Paint_Clear(WHITE);
   skin_prepare(gImage);
-#ifndef DEBUG_NO_EPD
+
   EPD_1IN54_V2_Init();
   printf("DisplayPartBaseImage\r\n");
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
-#endif    /*  not DEBUG_NO_EPD */
 
   enter_stop2();
 
@@ -415,7 +420,7 @@ int main(void)
 
     skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv);
 
-#ifndef DEBUG_NO_EPD
+
     epd_power_on();
     EPD_1IN54_V2_Init_Partial(); /* Wake up */
     printf("EPD init partial done %ld ms\n", rtc_get_ms());
@@ -426,7 +431,6 @@ int main(void)
     printf("EPD sleep %ld ms\n", rtc_get_ms());
     EPD_1IN54_V2_Sleep();
     //epd_power_off();
-#endif    /*  not DEBUG_NO_EPD */
 
     printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
@@ -646,6 +650,16 @@ static void MX_SPI1_Init(void)
 {
 
   /* USER CODE BEGIN SPI1_Init 0 */
+
+#ifdef DEBUG_NO_EPD
+  /* Put SPI pin + in analog to save power */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_7|EPD_ENABLE_Pin|EPD_CS_Pin|EPD_DC_Pin|EPD_RST_Pin|EPD_BUSY_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  return;
+#endif /* DEBUG_NO_EPD */
 
   /* USER CODE END SPI1_Init 0 */
 
