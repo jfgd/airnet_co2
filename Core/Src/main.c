@@ -127,6 +127,21 @@ static inline void led_yellow_off(void)
   HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
 }
 
+static void led_roll(int per_led_delay_ms, int iterations)
+{
+  for (int i = 0 ; i < iterations ; i++) {
+    led_red_on();
+    HAL_Delay(per_led_delay_ms);
+    led_green_on();
+    led_red_off();
+    HAL_Delay(per_led_delay_ms);
+    led_yellow_on();
+    led_green_off();
+    HAL_Delay(per_led_delay_ms);
+    led_yellow_off();
+  }
+}
+
 static inline void epd_power_on(void)
 {
 #ifndef DEBUG_NO_EPD
@@ -139,6 +154,14 @@ static inline void epd_power_off(void)
 #ifndef DEBUG_NO_EPD
   HAL_GPIO_WritePin(EPD_ENABLE_GPIO_Port, EPD_ENABLE_Pin, GPIO_PIN_RESET);
 #endif  /* not DEBUG_NO_EPD */
+}
+
+static void epd_wait_busy_led(void)
+{
+  /* LOW: idle, HIGH: busy */
+  while(HAL_GPIO_ReadPin(EPD_BUSY_GPIO_Port, EPD_BUSY_Pin) == 1) {
+      led_roll(100, 1);
+  }
 }
 
 uint32_t rtc_get_tick(void)
@@ -170,7 +193,7 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   }
 }
 
-void draw_logo(uint8_t *image) {
+static void draw_logo(uint8_t *image) {
   UNUSED(image);
   int y_pos = 50;
   Paint_DrawString_j(4, y_pos, "AirNet", &Airnet40NotoSansSemiCondensedBoldItalic,
@@ -190,21 +213,6 @@ void DEV_SPI_WriteByte(UBYTE value)
 #else
   UNUSED(value);
 #endif  /* not DEBUG_NO_EPD */
-}
-
-void led_roll(int per_led_delay_ms, int iterations)
-{
-  for (int i = 0 ; i < iterations ; i++) {
-    led_red_on();
-    HAL_Delay(per_led_delay_ms);
-    led_green_on();
-    led_red_off();
-    HAL_Delay(per_led_delay_ms);
-    led_yellow_on();
-    led_green_off();
-    HAL_Delay(per_led_delay_ms);
-    led_yellow_off();
-  }
 }
 
 static void enter_stop2(void)
@@ -232,6 +240,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+  uint32_t ts_ms_start = 0;
   uint32_t ts_ms_sensors_read = 0;
   uint16_t co2_ppm = 0;
   uint32_t temperature = 0;
@@ -273,16 +282,38 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  led_roll(100, 5);
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 
   stcc4_init(STCC4_I2C_ADDR_64);
 
-  if (stcc4_stop_continuous_measurement() != NO_ERROR) {
+  if (stcc4_stop_continuous_measurement_nowait() != NO_ERROR) { /* 1200 ms wait */
     printf("error executing stop_continuous_measurement()\n");
     Error_Handler();
   }
+  ts_ms_start = rtc_get_ms();
+  /* Need to wait 1200 ms before next stcc4 cmd */
 
+  /* Prepare image */
+  Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
+  Paint_SelectImage(gImage);
+  Paint_Clear(WHITE);
+  draw_logo(gImage);
+  Paint_DrawString_j((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*font12.max_width)/2,
+		     130, VERSION, &font12, 0, BLACK, WHITE);
+
+  /* Start screen */
+  epd_power_on();
+  printf("EPD init %ld ms\n", rtc_get_ms());
+  EPD_1IN54_V2_Init();          /* 448 ms */
+  EPD_1IN54_V2_DisplayAsync(gImage); /* 216 ms, 2040 ms read busy ok*/
+
+  /* Wait STCC4 ready */
+  while (rtc_get_ms() - ts_ms_start < 1200) {
+    printf("STCC4 not ready %ld\n", rtc_get_ms() - ts_ms_start);
+    led_roll(100, 1);
+  }
+
+  /* Now STCC4 should be ready */
   err = stcc4_get_product_id(&stcc4_product_id, &stcc4_sn);
   if (err != NO_ERROR) {
 #ifndef DEBUG_NO_SENSORS
@@ -292,31 +323,15 @@ int main(void)
   }
   printf("stcc4 pid 0x%lx 0x%lx\n", stcc4_product_id, (uint32_t)stcc4_sn);
 
-  printf("STCC4 init done %ld ms\n", rtc_get_ms());
+  /* Wait for screen to finish display image */
+  epd_wait_busy_led();
+  /* We are now around 2528 ms after ts_ms_start */
 
-  Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
-  Paint_SelectImage(gImage);
-  Paint_Clear(WHITE);
-  draw_logo(gImage);
-  Paint_DrawString_j((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*font12.max_width)/2,
-		     130, VERSION, &font12, 0, BLACK, WHITE);
+  /* Wat a bit more so image is visible */
+  while (rtc_get_ms() < 4000) {
+    led_roll(100, 1);
+  }
 
-  epd_power_on();
-  printf("init %ld ms\n", rtc_get_ms());
-  EPD_1IN54_V2_Init();          /* 448 ms */
-  /* printf("clear %ld ms\n", rtc_get_ms()); */
-  /* EPD_1IN54_V2_Clear();         /\* 2256 ms *\/ */
-  printf("display %ld ms\n", rtc_get_ms());
-  uint32_t ts_disp_start_init = rtc_get_ms();
-  EPD_1IN54_V2_DisplayAsync(gImage); /* 216 ms*/  /* 2040 ms */
-  printf("display async done %ld ms (%ld ms)\n", rtc_get_ms(),
-	 rtc_get_ms() - ts_disp_start_init);
-  led_roll(150, 3);
-  printf("led done %ld ms\n", rtc_get_ms());
-  EPD_1IN54_V2_ReadBusy();      /* 1824ms */
-  printf("display done %ld ms (%ld ms)\n", rtc_get_ms(),
-	 rtc_get_ms() - ts_disp_start_init);
-  printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
   Paint_Clear(WHITE);
   skin_prepare(gImage);
