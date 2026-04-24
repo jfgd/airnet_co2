@@ -59,5 +59,6 @@ extern jFont Airnet40NotoSansSemiCondensedBoldItalic;
 extern jFont CO253NotoSansExtraBold;
 extern jFont CO2ppm25NotoSansMedium;
 extern jFont Thermometer50;
+extern jFont Droplet20;
 
 #endif /* __JFONTS_H */

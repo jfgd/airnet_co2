@@ -108,6 +108,8 @@ void skin_prepare(uint8_t *image)
   Paint_Clear(WHITE);
 
   Paint_DrawjChar(2, YSTART_TEMP, 'T', &Thermometer50, BLACK, WHITE);
+  Paint_DrawjChar(XSTART_HUMI+(2*24), YSTART_TEMP+20, 'D',
+		  &Droplet20, BLACK, WHITE);
 
   Paint_DrawString_j(XSTART_TEMP+(2*24), YSTART_TEMP+2, "°C",
                      &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
