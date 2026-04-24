@@ -130,6 +130,7 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
   char temperature_str2[STR_DISP_LEN] = {0};
   char humidity_str[STR_DISP_LEN] = {0};
   char vbat_mv_str[STR_DISP_LEN] = {0};
+  char counter_str[STR_DISP_LEN] = {0};
 
   if (co2_ppm > 10000) {
     co2_ppm = 9999;
@@ -187,12 +188,13 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
 
   /* Debug */
   printf("counter %ld\n", counter);
-  Paint_ClearWindows(1, 166, 1+Font12.Width*12, 166+Font12.Height, WHITE);
-  Paint_DrawNum(1, 166, counter,
-                &Font12, BLACK, WHITE);
+  snprintf(counter_str, STR_DISP_LEN, "%ld", counter);
+  Paint_ClearWindows(1, 166, 1+font12.max_width*12, 166+font12.height, WHITE);
+  Paint_DrawString_j(1, 166, counter_str,
+		     &font12, 0, BLACK, WHITE);
 
   snprintf(vbat_mv_str, STR_DISP_LEN, "%ld mV", vbat_mv);
-  Paint_ClearWindows(150, 166, 150+Font12.Width*4, 166+Font12.Height, WHITE);
-  Paint_DrawString_EN(150, 166, vbat_mv_str,
-                      &Font12, BLACK, WHITE);
+  Paint_ClearWindows(150, 166, 150+font12.max_width*4, 166+font12.height, WHITE);
+  Paint_DrawString_j(150, 166, vbat_mv_str,
+		     &font12, 0, BLACK, WHITE);
 }

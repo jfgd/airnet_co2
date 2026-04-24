@@ -160,9 +160,9 @@ static void menu_draw_base_image(void)
 	Paint_DrawLine(0, y, EPD_1IN54_V2_WIDTH, y,
 		       BLACK, SELECT_ROW_LINE_WIDTH, LINE_STYLE_SOLID);
 
-	Paint_DrawString_EN(0, EPD_1IN54_V2_HEIGHT - 12, "PREVIOUS: Double press", &Font12, BLACK, WHITE);
-	Paint_DrawString_EN(0, EPD_1IN54_V2_HEIGHT - 12*2, "NEXT: Short press", &Font12, BLACK, WHITE);
-	Paint_DrawString_EN(0, EPD_1IN54_V2_HEIGHT - 12*3, "SELECT: Long press", &Font12, BLACK, WHITE);
+	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12, "PREVIOUS: Double press", &font12, 0, BLACK, WHITE);
+	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*2, "NEXT: Short press", &font12, 0, BLACK, WHITE);
+	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*3, "SELECT: Long press", &font12, 0, BLACK, WHITE);
 }
 
 
@@ -175,16 +175,16 @@ static void menu_clear(void)
 			   y + HEADER_HEIGHT -HEADER_LINE_WIDTH, WHITE);
 	y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
-			   y + TEXT_OFFSET_Y + Font12.Height, WHITE);
+			   y + TEXT_OFFSET_Y + font12.height, WHITE);
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
-			   y + TEXT_OFFSET_Y + Font12.Height, BLACK);
+			   y + TEXT_OFFSET_Y + font12.height, BLACK);
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
-			   y + TEXT_OFFSET_Y + Font12.Height, WHITE);
+			   y + TEXT_OFFSET_Y + font12.height, WHITE);
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
-			   y + TEXT_OFFSET_Y + Font12.Height, WHITE);
+			   y + TEXT_OFFSET_Y + font12.height, WHITE);
 
 }
 
@@ -208,23 +208,23 @@ static void menu_draw_main(int menu_idx, int item_idx)
 		y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
 		printf("menu: menu_idx %d UNSLECTED\n", menu_idx);
 		m = &g_menu[mod(menu_idx - 1, MENU_LENGTH)];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
-				    &Font12, BLACK, WHITE);
+		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
+				    &font12, 0, BLACK, WHITE);
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 		m = &g_menu[menu_idx];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
-				    &Font12, WHITE, BLACK);
+		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
+				    &font12, 0, WHITE, BLACK);
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 		m = &g_menu[mod(menu_idx + 1, MENU_LENGTH)];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
-				    &Font12, BLACK, WHITE);
+		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
+				    &font12, 0, BLACK, WHITE);
 
 		/* Help */
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 		m = &g_menu[menu_idx];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y+ TEXT_OFFSET_Y,
-				    g_menu[menu_idx].help,
-				    &Font12, BLACK, WHITE);
+		Paint_DrawString_j(TEXT_OFFSET_X, y+ TEXT_OFFSET_Y,
+				   g_menu[menu_idx].help,
+				   &font12, 0, BLACK, WHITE);
 	} else {
 		if (menu_idx < 0 || menu_idx > MENU_LENGTH) {
 			printf("ERROR: WRONG menu_idx %d\n", menu_idx);
@@ -241,16 +241,16 @@ static void menu_draw_main(int menu_idx, int item_idx)
 		y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
 		printf("menu: menu_idx %d item_idx %d\n", menu_idx, item_idx);
 		itm = &g_menu[menu_idx].items[mod(item_idx - 1, items_len)];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
-				    &Font12, BLACK, WHITE);
+		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
+				    &font12, 0, BLACK, WHITE);
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 		itm = &g_menu[menu_idx].items[item_idx];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
-				    &Font12, WHITE, BLACK);
+		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
+				    &font12, 0, WHITE, BLACK);
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 		itm = &g_menu[menu_idx].items[mod(item_idx + 1, items_len)];
-		Paint_DrawString_EN(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
-				    &Font12, BLACK, WHITE);
+		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
+				    &font12, 0, BLACK, WHITE);
 	}
 }
 

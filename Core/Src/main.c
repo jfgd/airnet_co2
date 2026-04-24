@@ -290,8 +290,8 @@ int main(void)
   Paint_SelectImage(gImage);
   Paint_Clear(WHITE);
   draw_logo(gImage);
-  Paint_DrawString_EN((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*Font12.Width)/2,
-                      130, VERSION, &Font12, BLACK, WHITE);
+  Paint_DrawString_j((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*font12.max_width)/2,
+		     130, VERSION, &font12, 0, BLACK, WHITE);
 
 #ifndef DEBUG_NO_EPD
   epd_power_on();

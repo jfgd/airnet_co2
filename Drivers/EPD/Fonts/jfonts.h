@@ -51,7 +51,7 @@ static inline int jfont_get_width(jFont *font, char c)
 	return font->max_width;
 }
 
-
+extern jFont font12;
 extern jFont Digits25NotoSansSemiCondensedBold;
 extern jFont Digits50NotoSansSemiCondensedBold;
 extern jFont Digits90NotoSansSemiCondensedBold;
