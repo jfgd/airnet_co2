@@ -48,6 +48,20 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
+extern uint32_t rtc_get_ms(void);
+#ifdef DEBUG_PRINT
+#define TS(f)                                                           \
+  {                                                                     \
+    uint32_t _ts_ms = rtc_get_ms();                                     \
+    f;                                                                  \
+    printf("Duration %s %s:%d : %ld ms\n", #f, __FILE_NAME__, __LINE__, \
+           rtc_get_ms() - _ts_ms);                                      \
+  }
+#else
+#define TS(f)  f;
+#endif
+
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -229,6 +243,108 @@ static void enter_stop2(void)
   /* TODO: reconfigure GPIO */
 }
 
+static void read_data_and_draw(int display)
+{
+  uint32_t ts_ms;
+  uint32_t ts_ms_start;
+  int16_t err = 0;
+
+  uint16_t co2_ppm = 0;
+  uint32_t temperature = 0;
+  uint32_t humidity = 0;
+  uint32_t vbat_mv = 0;
+
+  int16_t co2_concentration_raw = 0;
+  uint16_t temperature_raw = 0;
+  uint16_t relative_humidity_raw = 0;
+  uint16_t sensor_status_raw = 0;
+  uint32_t adc_val;
+
+  ts_ms_start = rtc_get_ms();   /* t = 0 ms */
+
+  /* Exit STCC4 sleep */
+  err = stcc4_exit_sleep_mode_nowait(); /* Must wait 5 ms */
+  ts_ms = rtc_get_ms();
+  if (err != NO_ERROR) {
+    printf("Error stcc4_exit_sleep_mode\n");
+    Error_Handler();
+  }
+
+  /* Start reading bat voltage */
+  if (HAL_ADC_Start(&hadc1) != HAL_OK)
+  {
+      Error_Handler();
+  }
+
+  HAL_ADC_PollForConversion(&hadc1, 10000);
+  adc_val = HAL_ADC_GetValue(&hadc1);
+  vbat_mv = (adc_val * 3300) / 4095;
+  printf("adc %ld %ld mV %ld ms\n", adc_val, vbat_mv,rtc_get_ms());
+  HAL_ADC_Stop(&hadc1);
+
+  /* Wait exit sleep done */
+  while (rtc_get_ms() - ts_ms < 5) {
+    printf("wait exit sleep %ld\n", rtc_get_ms() - ts_ms);
+  }
+  /* t ~= 5 ms */
+
+  /* Launch measure single shot */
+  err = stcc4_measure_single_shot_nowait(); /* Must wait 500 ms */
+  ts_ms = rtc_get_ms();
+  if (err != NO_ERROR) {
+    printf("Error stcc4_measure_single_shot\n");
+    Error_Handler();
+  }
+
+  if (display) {
+    TS(EPD_1IN54_V2_Init_Partial()); /* 524 ms Wake up */
+  }
+
+  /* Wait measure single done */
+  while (rtc_get_ms() - ts_ms < 500) {
+    printf("wait measure single %ld\n", rtc_get_ms() - ts_ms);
+    HAL_Delay(25);
+  }
+  /* t ~= 530 ms */
+  printf("t = %ld\n", rtc_get_ms() - ts_ms_start);
+
+  /* Read measurement */
+  err = stcc4_read_measurement_raw(&co2_concentration_raw, &temperature_raw,
+                                   &relative_humidity_raw, &sensor_status_raw);
+  if (err != NO_ERROR) {
+#ifndef DEBUG_NO_SENSORS
+    printf("Error stcc4_read_measurement_raw retrying in 150ms\n");
+    HAL_Delay(150);
+    err = stcc4_read_measurement_raw(&co2_concentration_raw, &temperature_raw,
+                                     &relative_humidity_raw, &sensor_status_raw);
+    if (err != NO_ERROR) {
+      printf("Error stcc4_read_measurement_raw\n");
+      Error_Handler();
+    }
+#endif    /*  not DEBUG_NO_SENSORS */
+  }
+  printf("t = %ld\n", rtc_get_ms() - ts_ms_start);
+
+  /* Sleep sensor */
+  err = stcc4_enter_sleep_mode_nowait(); /* Must wait 1 ms */
+  if (err != NO_ERROR) {
+    printf("Error stcc4_enter_sleep_mode\n");
+  }
+
+  co2_ppm = co2_concentration_raw;
+  temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500; /* in c°C */
+  humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
+  printf("sensor: co2 is %02dppm.\n", co2_ppm);
+  printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
+  printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
+
+
+  TS(skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv)); /* 260 ms ! */
+
+  printf("Loop duration : %ld ms\n", rtc_get_ms() - ts_ms_start);
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -241,18 +357,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   uint32_t ts_ms_start = 0;
-  uint32_t ts_ms_sensors_read = 0;
-  uint16_t co2_ppm = 0;
-  uint32_t temperature = 0;
-  uint32_t humidity = 0;
   int16_t err = 0;
   uint32_t stcc4_product_id;
   uint64_t stcc4_sn;
-  uint32_t vbat_mv = 0;
-  int16_t co2_concentration_raw = 0;
-  uint16_t temperature_raw = 0;
-  uint16_t relative_humidity_raw = 0;
-  uint16_t sensor_status_raw = 0;
 
   /* USER CODE END 1 */
 
@@ -327,17 +434,21 @@ int main(void)
   epd_wait_busy_led();
   /* We are now around 2528 ms after ts_ms_start */
 
-  /* Wat a bit more so image is visible */
+  /* Wait a bit more so image is visible */
   while (rtc_get_ms() < 4000) {
     led_roll(100, 1);
   }
 
+  /* Prepare data display */
+  TS(skin_prepare(gImage));     /* 36 ms */
 
-  Paint_Clear(WHITE);
-  skin_prepare(gImage);
+  /* Do a first read and display */
+  read_data_and_draw(0);
 
-  EPD_1IN54_V2_Init();
-  printf("DisplayPartBaseImage\r\n");
+  /* Schedule RTC wake up */
+  /* TODO */
+
+  /* Display */
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
 
   enter_stop2();
@@ -370,74 +481,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    uint32_t start_ms = rtc_get_ms();
-    if ((start_ms - ts_ms_sensors_read) < 4900) {
-      printf("Looped to soon skip\n");
-      HAL_Delay(200);
-      continue;
-    }
+    /* uint32_t start_ms = rtc_get_ms(); */
+    /* if ((start_ms - ts_ms_sensors_read) < 4900) { */
+    /*   printf("Looped to soon skip\n"); */
+    /*   HAL_Delay(200); */
+    /*   continue; */
+    /* } */
 
-    printf("\n");
-    printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
-    if (HAL_ADC_Start(&hadc1) != HAL_OK)
-    {
-      Error_Handler();
-    }
+    printf("\n\n");
 
-    ts_ms_sensors_read = rtc_get_ms();
-    /* Read data */
-    printf("CALL stcc4_exit_sleep_mode\n");
-    err = stcc4_exit_sleep_mode();
-    if (err != NO_ERROR) {
-      printf("Error stcc4_exit_sleep_mode\n");
-      Error_Handler();
-    }
-    printf("DONE stcc4_exit_sleep_mode\n");
-    printf("CALL stcc4_measure_single_shot\n");
-    err = stcc4_measure_single_shot();
-    if (err != NO_ERROR) {
-      printf("Error stcc4_measure_single_shot\n");
-    }
-    printf("DONE stcc4_measure_single_shot\n");
-    err = stcc4_read_measurement_raw(
-      &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
-      &sensor_status_raw);
-    if (err != NO_ERROR) {
-#ifndef DEBUG_NO_SENSORS
-      printf("Error stcc4_read_measurement_raw retrying in 150ms\n");
-      HAL_Delay(150);
-      err = stcc4_read_measurement_raw(
-        &co2_concentration_raw, &temperature_raw, &relative_humidity_raw,
-        &sensor_status_raw);
-      if (err != NO_ERROR) {
-        printf("Error stcc4_read_measurement_raw\n");
-        Error_Handler();
-      }
-#endif    /*  not DEBUG_NO_SENSORS */
-    }
-    err = stcc4_enter_sleep_mode();
-    if (err != NO_ERROR) {
-      printf("Error stcc4_enter_sleep_mode\n");
-    }
-    co2_ppm = co2_concentration_raw;
-    temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500; /* in c°C */
-    humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
-    printf("sensor: co2 is %02dppm.\n", co2_ppm);
-    printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
-    printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
-
-    printf("loop %ld ms\n", rtc_get_ms());
-    HAL_ADC_PollForConversion(&hadc1, 10000);
-    uint32_t adc_val = HAL_ADC_GetValue(&hadc1);
-    vbat_mv = (adc_val * 3300) / 4095;
-    printf("adc %ld %ld mV %ld ms\n", adc_val, vbat_mv,rtc_get_ms());
-    HAL_ADC_Stop(&hadc1);
-
-    skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv);
-
+    read_data_and_draw(1);
 
     epd_power_on();
-    EPD_1IN54_V2_Init_Partial(); /* Wake up */
+    //EPD_1IN54_V2_Init_Partial(); /* Wake up */
     printf("EPD init partial done %ld ms\n", rtc_get_ms());
     uint32_t ts_disp_start = rtc_get_ms();
     EPD_1IN54_V2_DisplayPart(gImage); /* 812 ms */
@@ -446,8 +502,6 @@ int main(void)
     printf("EPD sleep %ld ms\n", rtc_get_ms());
     EPD_1IN54_V2_Sleep();
     //epd_power_off();
-
-    printf("wakeup cnt %ld\n", HAL_RTCEx_GetWakeUpTimer(&hrtc));
 
     /* Going to sleep */
     enter_stop2();
