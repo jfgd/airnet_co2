@@ -48,20 +48,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
-extern uint32_t rtc_get_ms(void);
-#ifdef DEBUG_PRINT
-#define TS(f)                                                           \
-  {                                                                     \
-    uint32_t _ts_ms = rtc_get_ms();                                     \
-    f;                                                                  \
-    printf("Duration %s %s:%d : %ld ms\n", #f, __FILE_NAME__, __LINE__, \
-           rtc_get_ms() - _ts_ms);                                      \
-  }
-#else
-#define TS(f)  f;
-#endif
-
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/

@@ -93,6 +93,19 @@ void Error_Handler(void);
 #define printf(...)
 #endif
 
+#ifdef DEBUG_PRINT
+extern uint32_t rtc_get_ms(void);
+#define TS(f)                                                           \
+  {                                                                     \
+    uint32_t _ts_ms = rtc_get_ms();                                     \
+    f;                                                                  \
+    printf("Duration %s %s:%d : %ld ms\n", #f, __FILE_NAME__, __LINE__, \
+           rtc_get_ms() - _ts_ms);                                      \
+  }
+#else
+#define TS(f)  f;
+#endif
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
