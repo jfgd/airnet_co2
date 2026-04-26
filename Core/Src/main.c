@@ -428,13 +428,16 @@ int main(void)
   }
 
   /* Prepare data display */
-  TS(skin_prepare(gImage));     /* 36 ms */
+  TS(skin_prepare(gImage));     /* 12 ms */
 
   /* Do a first read and display */
   read_data_and_draw(0);
 
   /* Schedule RTC wake up */
-  /* TODO */
+  HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+  printf("Setting RTC wake up to %d seconds\n", g_conf.refresh_rate_sec);
+  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, g_conf.refresh_rate_sec - 1,
+			      RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
 
   /* Display */
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
@@ -688,7 +691,7 @@ static void MX_RTC_Init(void)
 
   /** Enable the WakeUp
   */
-  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 5, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0) != HAL_OK)
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0) != HAL_OK)
   {
     Error_Handler();
   }
