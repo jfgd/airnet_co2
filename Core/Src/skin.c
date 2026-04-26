@@ -35,7 +35,7 @@
 #define XSTART_HUMI 122
 #define YSTART_HUMI 0
 #define XSTART_CO2_PPM 8
-#define YSTART_CO2_PPM 55
+#define YSTART_CO2_PPM 62
 
 /* draw_slider_border()
  * Permanent slider drawing, draw cursor inside with
@@ -173,14 +173,14 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
   /* CO2 */
   snprintf(co2_ppm_str, STR_DISP_LEN, "%02d", co2_ppm);
   Paint_ClearWindows(XSTART_CO2_PPM, YSTART_CO2_PPM,
-                     XSTART_CO2_PPM + Digits90NotoSansSemiCondensedBold.max_width * 4,
-                     YSTART_CO2_PPM + Digits90NotoSansSemiCondensedBold.height, WHITE);
+                     XSTART_CO2_PPM + Digits65NotoSansSemiCondensedBold.max_width * 4,
+                     YSTART_CO2_PPM + Digits65NotoSansSemiCondensedBold.height, WHITE);
   int xstart = XSTART_CO2_PPM;
   if (co2_ppm < 1000) {
     xstart = 31;                /* Center */
   }
   Paint_DrawString_j(xstart, YSTART_CO2_PPM, co2_ppm_str,
-                     &Digits90NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+                     &Digits65NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 #define MAX_SLIDER_PPM 2500
 #define MIN_SLIDER_PPM 400
   static int perthousand_prev = 0;
