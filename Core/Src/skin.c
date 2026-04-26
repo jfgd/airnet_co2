@@ -30,7 +30,7 @@
 #define STR_DISP_LEN 16
 
 
-#define XSTART_TEMP 25
+#define XSTART_TEMP 23
 #define YSTART_TEMP 0
 #define XSTART_HUMI 122
 #define YSTART_HUMI 0
@@ -108,13 +108,13 @@ void skin_prepare(uint8_t *image)
   UNUSED(image);
   Paint_Clear(WHITE);
 
-  Paint_DrawjChar(2, YSTART_TEMP, 'T', &Thermometer50, BLACK, WHITE);
-  Paint_DrawjChar(XSTART_HUMI+(2*24), YSTART_TEMP+20, 'D',
-		  &Droplet20, BLACK, WHITE);
+  Paint_DrawjChar(0, YSTART_TEMP, 'T', &Thermometer50, BLACK, WHITE);
+  Paint_DrawjChar(XSTART_HUMI+(2*27), YSTART_TEMP+20, 'D',
+                  &Droplet20, BLACK, WHITE);
 
-  Paint_DrawString_j(XSTART_TEMP+(2*24), YSTART_TEMP+2, "°C",
+  Paint_DrawString_j(XSTART_TEMP+(2*27), YSTART_TEMP+2, "°C",
                      &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
-  Paint_DrawString_j(XSTART_HUMI+(2*24), YSTART_HUMI+2, "%",
+  Paint_DrawString_j(XSTART_HUMI+(2*27), YSTART_HUMI+2, "%",
                      &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
   Paint_DrawString_j(70, YSTART_CO2_PPM+85, "CO² ppm",
@@ -152,23 +152,23 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
   snprintf(temperature_str1, STR_DISP_LEN, "%ld", temperature / 100);
   snprintf(temperature_str2, STR_DISP_LEN, ".%ld", (temperature - ((temperature / 100)*100))/10);
   Paint_ClearWindows(XSTART_TEMP, YSTART_TEMP,
-                     XSTART_TEMP + 24 * 2,
-                     YSTART_TEMP + Digits50NotoSansSemiCondensedBold.height, WHITE);
-  Paint_ClearWindows(XSTART_TEMP+(2*24), YSTART_TEMP+20,
-                     XSTART_TEMP+(2*24) + 11 + 6,
+                     XSTART_TEMP + 27 * 2,
+                     YSTART_TEMP + Digits39NotoSansSemiCondensedBold.height, WHITE);
+  Paint_ClearWindows(XSTART_TEMP+(2*27), YSTART_TEMP+20,
+                     XSTART_TEMP+(2*27) + 11 + 6,
                      YSTART_TEMP+20 + Digits25NotoSansSemiCondensedBold.height, WHITE);
   Paint_DrawString_j(XSTART_TEMP, YSTART_TEMP, temperature_str1,
-                     &Digits50NotoSansSemiCondensedBold, 0, BLACK, WHITE);
-  Paint_DrawString_j(XSTART_TEMP+(2*24), YSTART_TEMP+20, temperature_str2,
+                     &Digits39NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+  Paint_DrawString_j(XSTART_TEMP+(2*27), YSTART_TEMP+20, temperature_str2,
                      &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
   /* Humidity */
   snprintf(humidity_str, STR_DISP_LEN, "%ld", humidity);
   Paint_ClearWindows(XSTART_HUMI, YSTART_HUMI,
                      XSTART_HUMI + 24 * 2,
-                     YSTART_HUMI + Digits50NotoSansSemiCondensedBold.height, WHITE);
+                     YSTART_HUMI + Digits39NotoSansSemiCondensedBold.height, WHITE);
   Paint_DrawString_j(XSTART_HUMI, YSTART_HUMI, humidity_str,
-                     &Digits50NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+                     &Digits39NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
   /* CO2 */
   snprintf(co2_ppm_str, STR_DISP_LEN, "%02d", co2_ppm);

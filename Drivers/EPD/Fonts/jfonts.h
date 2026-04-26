@@ -53,7 +53,7 @@ static inline int jfont_get_width(jFont *font, char c)
 
 extern jFont font12;
 extern jFont Digits25NotoSansSemiCondensedBold;
-extern jFont Digits50NotoSansSemiCondensedBold;
+extern jFont Digits39NotoSansSemiCondensedBold;
 extern jFont Digits65NotoSansSemiCondensedBold;
 extern jFont Airnet40NotoSansSemiCondensedBoldItalic;
 extern jFont CO253NotoSansExtraBold;
