@@ -30,7 +30,7 @@
 #define STR_DISP_LEN 16
 
 
-#define XSTART_TEMP 23
+#define XSTART_TEMP 19
 #define YSTART_TEMP 0
 #define XSTART_HUMI 122
 #define YSTART_HUMI 0
@@ -108,7 +108,7 @@ void skin_prepare(uint8_t *image)
   UNUSED(image);
   Paint_Clear(WHITE);
 
-  Paint_DrawjChar(0, YSTART_TEMP, 'T', &Thermometer50, BLACK, WHITE);
+  Paint_DrawjChar(0, YSTART_TEMP, 'T', &Thermometer39, BLACK, WHITE);
   Paint_DrawjChar(XSTART_HUMI+(2*27), YSTART_TEMP+20, 'D',
                   &Droplet20, BLACK, WHITE);
 
@@ -165,7 +165,7 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
   /* Humidity */
   snprintf(humidity_str, STR_DISP_LEN, "%ld", humidity);
   Paint_ClearWindows(XSTART_HUMI, YSTART_HUMI,
-                     XSTART_HUMI + 24 * 2,
+                     XSTART_HUMI + 27 * 2,
                      YSTART_HUMI + Digits39NotoSansSemiCondensedBold.height, WHITE);
   Paint_DrawString_j(XSTART_HUMI, YSTART_HUMI, humidity_str,
                      &Digits39NotoSansSemiCondensedBold, 0, BLACK, WHITE);

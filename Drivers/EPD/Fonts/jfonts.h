@@ -58,7 +58,7 @@ extern jFont Digits65NotoSansSemiCondensedBold;
 extern jFont Airnet40NotoSansSemiCondensedBoldItalic;
 extern jFont CO253NotoSansExtraBold;
 extern jFont CO2ppm25NotoSansMedium;
-extern jFont Thermometer50;
+extern jFont Thermometer39;
 extern jFont Droplet20;
 extern jFont Lightning27;
 
