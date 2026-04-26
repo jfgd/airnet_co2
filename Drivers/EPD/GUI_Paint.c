@@ -78,6 +78,9 @@
 #include <string.h> //memset()
 #include <math.h>
 
+#define likely(x)       __builtin_expect(!!(x), 1)
+#define unlikely(x)     __builtin_expect(!!(x), 0)
+
 PAINT Paint;
 
 /******************************************************************************
@@ -143,13 +146,13 @@ parameter:
 ******************************************************************************/
 void Paint_SetPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color)
 {
-    if(Xpoint > Paint.Width || Ypoint > Paint.Height){
+    if (unlikely(Xpoint > Paint.Width || Ypoint > Paint.Height)){
         Debug("Exceeding display boundaries\r\n");
         return;
     }
     UWORD X = Xpoint, Y = Ypoint;
 
-    if(X > Paint.WidthMemory || Y > Paint.HeightMemory){
+    if (unlikely(X > Paint.WidthMemory || Y > Paint.HeightMemory)){
         Debug("Exceeding display boundaries\r\n");
         return;
     }
@@ -532,7 +535,7 @@ void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const uint32_t Acsii_Char,
     uint16_t height;
     uint16_t width;
 
-    if (Xpoint > Paint.Width || Ypoint > Paint.Height) {
+    if (unlikely(Xpoint > Paint.Width || Ypoint > Paint.Height)) {
         Debug("Paint_DrawChar Input exceeds the normal display range\r\n");
         return;
     }
@@ -544,7 +547,7 @@ void Paint_DrawjChar(UWORD Xpoint, UWORD Ypoint, const uint32_t Acsii_Char,
         }
     }
 
-    if (glyph_idx < 0) {
+    if (unlikely(glyph_idx < 0)) {
         /* If not found use default char */
         Debug("char %ld not found\n", Acsii_Char);
         for (int i = 0 ; i < font->nb_glyphs ; i++) {
