@@ -25,6 +25,7 @@
 
 #include "EPD_1in54_V2.h"
 #include "GUI_Paint.h"
+#include "menu.h"
 
 extern volatile uint32_t g_ts_ms_last_button_pressed;
 extern volatile uint32_t g_ts_ms_previous_button_pressed;
@@ -40,16 +41,12 @@ static int mod(int a, int b)
     return r < 0 ? r + b : r;
 }
 
-enum temperature_unit {
-	CONF_TEMP_CELSIUS = 0,
-	CONF_TEMP_FAHRENHEIT = 1,
+struct conf g_conf = {
+	.refresh_rate_sec = 5,
+	.temperature_unit = CONF_TEMP_CELSIUS,
+	.debug_counter = 0,
+	.debug_bat_voltage = 0,
 };
-
-/* Only int allowed */
-struct {
-	int refresh_rate_sec; // = 5;
-	enum temperature_unit temperature_unit;
-} g_conf;
 
 
 /* struct s_menu; */
@@ -94,6 +91,26 @@ struct menu_list g_menu[] = {
 			{ .value = 60, .name = "1 min" },
 			{ .value = 300, .name = "5 min" },
 			{ .value = 600, .name = "10 min" },
+		},
+	},
+	{
+		.name = "Debug Counter",
+		.help = "Display a counter increasing at each refresh",
+		.type = SELECT,
+		.value = &g_conf.debug_counter,
+		.items = {
+			{ .value = 0, .name = "No" },
+			{ .value = 1, .name = "Yes" },
+		},
+	},
+	{
+		.name = "Debug Battery Voltage",
+		.help = "Display battery voltage in mV",
+		.type = SELECT,
+		.value = &g_conf.debug_bat_voltage,
+		.items = {
+			{ .value = 0, .name = "No" },
+			{ .value = 1, .name = "Yes" },
 		},
 	},
 	{
@@ -160,9 +177,12 @@ static void menu_draw_base_image(void)
 	Paint_DrawLine(0, y, EPD_1IN54_V2_WIDTH, y,
 		       BLACK, SELECT_ROW_LINE_WIDTH, LINE_STYLE_SOLID);
 
-	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12, "PREVIOUS: Double press", &font12, 0, BLACK, WHITE);
-	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*2, "NEXT: Short press", &font12, 0, BLACK, WHITE);
-	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*3, "SELECT: Long press", &font12, 0, BLACK, WHITE);
+	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12,
+			   "PREVIOUS: Double press", &font12, 0, BLACK, WHITE);
+	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*2,
+			   "NEXT: Short press", &font12, 0, BLACK, WHITE);
+	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*3,
+			   "SELECT: Long press", &font12, 0, BLACK, WHITE);
 }
 
 
@@ -171,21 +191,44 @@ static void menu_clear(void)
 	int y = 0;
 	printf("menu: clear\n");
 
+	/* Title */
 	Paint_ClearWindows(0, y, EPD_1IN54_V2_WIDTH,
 			   y + HEADER_HEIGHT -HEADER_LINE_WIDTH, WHITE);
+
+	/* Wheel 1st row */
 	y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
 			   y + TEXT_OFFSET_Y + font12.height, WHITE);
+
+	/* Wheel 2nd row */
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
 			   y + TEXT_OFFSET_Y + font12.height, BLACK);
-	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
-			   y + TEXT_OFFSET_Y + font12.height, WHITE);
+
+	/* Wheel 3rd row */
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
 			   y + TEXT_OFFSET_Y + font12.height, WHITE);
 
+	/* Help zone */
+	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
+			   y + TEXT_OFFSET_Y + font12.height*2, WHITE);
+
+}
+
+
+static int items_len(struct item *items) {
+	int len = 0;
+
+	for (int i = 0 ; i < MAX_LIST_SIZE ; i++) {
+		if (items[i].name != NULL) {
+			len++;
+		} else {
+			break;
+		}
+	}
+	return len;
 }
 
 
@@ -194,7 +237,7 @@ static void menu_draw_main(int menu_idx, int item_idx)
 	int y = 0;
 	struct menu_list *m;
 	struct item *itm;
-	int items_len = 0;
+	int ilen = 0;
 
 	if (item_idx == UNSELECTED) {
 		/* Main MENU */
@@ -226,21 +269,23 @@ static void menu_draw_main(int menu_idx, int item_idx)
 				   g_menu[menu_idx].help,
 				   &font12, 0, BLACK, WHITE);
 	} else {
+		/* Sub menu */
 		if (menu_idx < 0 || menu_idx > MENU_LENGTH) {
 			printf("ERROR: WRONG menu_idx %d\n", menu_idx);
 			return;
 		}
 
-		Paint_DrawString_EN(2, y, g_menu[menu_idx].name,
-				    &Font20, BLACK, WHITE);
+		Paint_DrawString_j(2, y, g_menu[menu_idx].name,
+				   &font12, 0, BLACK, WHITE);
 
-		items_len = (sizeof(g_menu[menu_idx].items) / sizeof(g_menu[menu_idx].items[0]));
+		ilen = items_len(g_menu[menu_idx].items) + 1;
+		printf("items len %d\n", ilen);
 		//itm = &g_menu[menu_idx].items[item_idx];
 
 		/* Select wheel */
 		y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
 		printf("menu: menu_idx %d item_idx %d\n", menu_idx, item_idx);
-		itm = &g_menu[menu_idx].items[mod(item_idx - 1, items_len)];
+		itm = &g_menu[menu_idx].items[mod(item_idx - 1, ilen)];
 		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
 				    &font12, 0, BLACK, WHITE);
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
@@ -248,7 +293,7 @@ static void menu_draw_main(int menu_idx, int item_idx)
 		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
 				    &font12, 0, WHITE, BLACK);
 		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-		itm = &g_menu[menu_idx].items[mod(item_idx + 1, items_len)];
+		itm = &g_menu[menu_idx].items[mod(item_idx + 1, ilen)];
 		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
 				    &font12, 0, BLACK, WHITE);
 	}
@@ -286,6 +331,11 @@ static enum menu_handle_ret menu_handle_button_pressed(
 			*item_idx = (*item_idx + 1) % items_len;
 			return NEED_REFRESH;
 		} else if (button_pressed == LONG_PRESS) {
+			if (g_menu[*menu_idx].items[*item_idx].name == NULL) {
+				/* Special for "back" */
+				*item_idx = UNSELECTED;
+				return NEED_REFRESH;
+			}
 			printf("value selected: %d written on %p\n", g_menu[*menu_idx].items[*item_idx].value, g_menu[*menu_idx].value);
 			*(g_menu[*menu_idx].value) = g_menu[*menu_idx].items[*item_idx].value;
 			*item_idx = UNSELECTED;

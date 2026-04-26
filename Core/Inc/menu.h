@@ -26,6 +26,23 @@
 #ifndef __MENU_H
 #define __MENU_H
 
+
+enum temperature_unit {
+	CONF_TEMP_CELSIUS = 0,
+	CONF_TEMP_FAHRENHEIT = 1,
+};
+
+/* Only int allowed */
+struct conf {
+	int refresh_rate_sec;
+	enum temperature_unit temperature_unit;
+	int debug_counter;
+	int debug_bat_voltage;
+};
+
+/* Global configuration */
+extern struct conf g_conf;
+
 void menu_enter(void);
 
 #endif /* __MENU_H */
