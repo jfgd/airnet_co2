@@ -168,6 +168,7 @@ extern PAINT_TIME sPaint_time;
 void Paint_NewImage(UBYTE *image, UWORD Width, UWORD Height, UWORD Color);
 void Paint_SelectImage(UBYTE *image);
 void Paint_SetPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color);
+void Paint_SetPixelHLine(UWORD Xstart, UWORD Xend, UWORD Y, UWORD Color);
 void Paint_SetScale(UBYTE scale);
 
 void Paint_Clear(UWORD Color);

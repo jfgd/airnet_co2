@@ -178,6 +178,51 @@ void Paint_SetPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color)
 }
 
 /******************************************************************************
+function: Draw a line of Pixels
+parameter:
+    Xpoint : At point X
+    Ypoint : At point Y
+    Color  : Painted colors
+******************************************************************************/
+void Paint_SetPixelHLine(UWORD Xstart, UWORD Xend, UWORD Y, UWORD Color)
+{
+    if (Y >= Paint.Height || Xstart >= Paint.Width)
+        return;
+    if (Xend > Paint.Width) Xend = Paint.Width; // clamp
+
+    UWORD x = Xstart;
+
+    /* XXX Only scale 2 is supported */
+
+    // Handle leading unaligned bits (until next byte boundary)
+    while (x < Xend && (x % 8 != 0)) {
+        UDOUBLE Addr = x / 8 + Y * Paint.WidthByte;
+        if (Color == BLACK)
+            Paint.Image[Addr] &= ~(0x80 >> (x % 8));
+        else
+            Paint.Image[Addr] |=  (0x80 >> (x % 8));
+        x++;
+    }
+
+    // Handle aligned middle bytes in one shot
+    uint8_t fill = (Color == BLACK) ? 0x00 : 0xFF;
+    while (x + 8 <= Xend) {
+        Paint.Image[x / 8 + Y * Paint.WidthByte] = fill;
+        x += 8;
+    }
+
+    // Handle trailing unaligned bits
+    while (x < Xend) {
+        UDOUBLE Addr = x / 8 + Y * Paint.WidthByte;
+        if (Color == BLACK)
+            Paint.Image[Addr] &= ~(0x80 >> (x % 8));
+        else
+            Paint.Image[Addr] |=  (0x80 >> (x % 8));
+        x++;
+    }
+}
+
+/******************************************************************************
 function: Clear the color of the picture
 parameter:
     Color : Painted colors
@@ -219,11 +264,9 @@ parameter:
 ******************************************************************************/
 void Paint_ClearWindows(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color)
 {
-    UWORD X, Y;
+    UWORD Y;
     for (Y = Ystart; Y < Yend; Y++) {
-        for (X = Xstart; X < Xend; X++) {//8 pixel =  1 byte
-            Paint_SetPixel(X, Y, Color);
-        }
+        Paint_SetPixelHLine(Xstart, Xend, Y, Color);
     }
 }
 
