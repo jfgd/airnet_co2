@@ -56,19 +56,19 @@ static void draw_slider_border(uint8_t *image, int xstart, int ystart,
                    color, border, DRAW_FILL_EMPTY);
 
   /* Clear left circle inside part */
-  Paint_DrawRectangle(xstart + radius, ystart, xstart + height + border,
-                      ystart + height, backcolor, border, DRAW_FILL_FULL);
+  Paint_ClearWindows(xstart + radius, ystart, xstart + height + border,
+		     ystart + height, backcolor);
 
   /* Clear right circle inside part */
-  Paint_DrawRectangle(xstart + width - height, ystart, xstart + width - radius,
-                      ystart + height, backcolor, border, DRAW_FILL_FULL);
+  Paint_ClearWindows(xstart + width - height - border, ystart, xstart + width - radius,
+		     ystart + height, backcolor);
 
   /* Top line */
-  Paint_DrawLine(xstart + radius, ystart, xstart + width - radius, ystart,
-                 color, border, LINE_STYLE_SOLID);
+  Paint_SetPixelHLine(xstart + radius, xstart + width - radius,
+		      ystart - border, color); /* border = 1 */
   /* Bottom line */
-  Paint_DrawLine(xstart + radius, ystart + height, xstart + width - radius,
-                 ystart + height, color, border, LINE_STYLE_SOLID);
+  Paint_SetPixelHLine(xstart + radius, xstart + width - radius,
+		      ystart + height -border, color); /* border = 1 */
 
 }
 
@@ -95,10 +95,10 @@ static void draw_slider_cursor(uint8_t *image, int xstart, int ystart,
                    ystart + height/2, radius,
                    color, border, DRAW_FILL_FULL);
 
-  Paint_DrawRectangle(xstart + height/2 + border + cursor_center_pos, ystart + border,
+  Paint_ClearWindows(xstart + height/2 + border + cursor_center_pos, ystart,
                       xstart + height/2 + border + cursor_intercenter
                       + cursor_center_pos,
-                      ystart + height, color, border, DRAW_FILL_FULL);
+                      ystart + height - border, color);
 
 }
 
