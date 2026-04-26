@@ -387,7 +387,7 @@ int main(void)
   /* Need to wait 1200 ms before next stcc4 cmd */
 
   /* Prepare image */
-  Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, 270, WHITE);
+  Paint_NewImage(gImage, EPD_1IN54_V2_WIDTH, EPD_1IN54_V2_HEIGHT, WHITE);
   Paint_SelectImage(gImage);
   Paint_Clear(WHITE);
   draw_logo(gImage);

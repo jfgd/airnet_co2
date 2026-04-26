@@ -88,7 +88,7 @@ parameter:
     Height  :   The height of the picture
     Color   :   Whether the picture is inverted
 ******************************************************************************/
-void Paint_NewImage(UBYTE *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color)
+void Paint_NewImage(UBYTE *image, UWORD Width, UWORD Height, UWORD Color)
 {
     Paint.Image = NULL;
     Paint.Image = image;
@@ -102,17 +102,9 @@ void Paint_NewImage(UBYTE *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD
     Paint.HeightByte = Height;    
 //    printf("WidthByte = %d, HeightByte = %d\r\n", Paint.WidthByte, Paint.HeightByte);
 //    printf(" EPD_WIDTH / 8 = %d\r\n",  122 / 8);
-   
-    Paint.Rotate = Rotate;
-    Paint.Mirror = MIRROR_NONE;
-    
-    if(Rotate == ROTATE_0 || Rotate == ROTATE_180) {
-        Paint.Width = Width;
-        Paint.Height = Height;
-    } else {
-        Paint.Width = Height;
-        Paint.Height = Width;
-    }
+
+    Paint.Width = Height;
+    Paint.Height = Width;
 }
 
 /******************************************************************************
@@ -123,21 +115,6 @@ parameter:
 void Paint_SelectImage(UBYTE *image)
 {
     Paint.Image = image;
-}
-
-/******************************************************************************
-function: Select Image Rotate
-parameter:
-    Rotate : 0,90,180,270
-******************************************************************************/
-void Paint_SetRotate(UWORD Rotate)
-{
-    if(Rotate == ROTATE_0 || Rotate == ROTATE_90 || Rotate == ROTATE_180 || Rotate == ROTATE_270) {
-        Debug("Set image Rotate %d\r\n", Rotate);
-        Paint.Rotate = Rotate;
-    } else {
-        Debug("rotate = 0, 90, 180, 270\r\n");
-    }
 }
 
 void Paint_SetScale(UBYTE scale)
@@ -156,22 +133,6 @@ void Paint_SetScale(UBYTE scale)
         Debug("Scale Only support: 2 4 7\r\n");
     }
 }
-/******************************************************************************
-function:	Select Image mirror
-parameter:
-    mirror   :Not mirror,Horizontal mirror,Vertical mirror,Origin mirror
-******************************************************************************/
-void Paint_SetMirroring(UBYTE mirror)
-{
-    if(mirror == MIRROR_NONE || mirror == MIRROR_HORIZONTAL || 
-        mirror == MIRROR_VERTICAL || mirror == MIRROR_ORIGIN) {
-        Debug("mirror image x:%s, y:%s\r\n",(mirror & 0x01)? "mirror":"none", ((mirror >> 1) & 0x01)? "mirror":"none");
-        Paint.Mirror = mirror;
-    } else {
-        Debug("mirror should be MIRROR_NONE, MIRROR_HORIZONTAL, \
-        MIRROR_VERTICAL or MIRROR_ORIGIN\r\n");
-    }    
-}
 
 /******************************************************************************
 function: Draw Pixels
@@ -185,46 +146,8 @@ void Paint_SetPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color)
     if(Xpoint > Paint.Width || Ypoint > Paint.Height){
         Debug("Exceeding display boundaries\r\n");
         return;
-    }      
-    UWORD X, Y;
-
-    switch(Paint.Rotate) {
-    case 0:
-        X = Xpoint;
-        Y = Ypoint;  
-        break;
-    case 90:
-        X = Paint.WidthMemory - Ypoint - 1;
-        Y = Xpoint;
-        break;
-    case 180:
-        X = Paint.WidthMemory - Xpoint - 1;
-        Y = Paint.HeightMemory - Ypoint - 1;
-        break;
-    case 270:
-        X = Ypoint;
-        Y = Paint.HeightMemory - Xpoint - 1;
-        break;
-    default:
-        return;
     }
-    
-    switch(Paint.Mirror) {
-    case MIRROR_NONE:
-        break;
-    case MIRROR_HORIZONTAL:
-        X = Paint.WidthMemory - X - 1;
-        break;
-    case MIRROR_VERTICAL:
-        Y = Paint.HeightMemory - Y - 1;
-        break;
-    case MIRROR_ORIGIN:
-        X = Paint.WidthMemory - X - 1;
-        Y = Paint.HeightMemory - Y - 1;
-        break;
-    default:
-        return;
-    }
+    UWORD X = Xpoint, Y = Ypoint;
 
     if(X > Paint.WidthMemory || Y > Paint.HeightMemory){
         Debug("Exceeding display boundaries\r\n");
