@@ -60,5 +60,6 @@ extern jFont CO253NotoSansExtraBold;
 extern jFont CO2ppm25NotoSansMedium;
 extern jFont Thermometer50;
 extern jFont Droplet20;
+extern jFont Lightning27;
 
 #endif /* __JFONTS_H */

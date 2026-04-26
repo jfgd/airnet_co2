@@ -324,8 +324,10 @@ static void read_data_and_draw(int display)
   printf("sensor: temperature is %ld cC, 0x%lx\n", temperature, temperature);
   printf("sensor: humidity is %ld, 0x%lx\n", humidity, humidity);
 
+  /* nPGOOD from battery charger, low when USB plugged */
+  int powered = HAL_GPIO_ReadPin(nPGOOD_GPIO_Port, nPGOOD_Pin) ? 0 : 1;;
 
-  TS(skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv)); /* 260 ms ! */
+  TS(skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv, powered)); /* 260 ms ! */
 
   printf("Loop duration : %ld ms\n", rtc_get_ms() - ts_ms_start);
 

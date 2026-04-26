@@ -23,6 +23,7 @@
   ******************************************************************************
   */
 
+#include <stdbool.h>
 #include "EPD_1in54_V2.h"
 #include "GUI_Paint.h"
 
@@ -123,7 +124,8 @@ void skin_prepare(uint8_t *image)
 }
 
 void skin_update(uint8_t *image, uint16_t co2_ppm,
-                 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv)
+                 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
+                 bool powered)
 {
   UNUSED(image);
   static uint32_t counter = 0;
@@ -187,6 +189,12 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
   draw_slider_cursor(image, 0, 180, 200, 18, BLACK, WHITE, perthousand);
   perthousand_prev = perthousand;
 
+  /* Power */
+  if (powered) {
+    Paint_DrawjChar(5, 130, 'L', &Lightning27, BLACK, WHITE);
+  } else {
+    Paint_ClearWindows(5, 130, 5+Lightning27.max_width, 130+Lightning27.height, WHITE);
+  }
 
   /* Debug */
   printf("counter %ld\n", counter);
@@ -196,7 +204,7 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
 		     &font12, 0, BLACK, WHITE);
 
   snprintf(vbat_mv_str, STR_DISP_LEN, "%ld mV", vbat_mv);
-  Paint_ClearWindows(150, 166, 150+font12.max_width*4, 166+font12.height, WHITE);
+  Paint_ClearWindows(150, 166, 150+font12.max_width*7, 166+font12.height, WHITE);
   Paint_DrawString_j(150, 166, vbat_mv_str,
 		     &font12, 0, BLACK, WHITE);
 }

@@ -26,9 +26,12 @@
 #ifndef __SKIN_H
 #define __SKIN_H
 
+#include <stdbool.h>
+
 void skin_prepare(uint8_t *gImage);
 
 void skin_update(uint8_t *gImage, uint16_t co2_ppm,
-		 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv);
+		 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
+		 bool powered);
 
 #endif /* __SKIN_H */
