@@ -120,7 +120,7 @@ void skin_prepare(uint8_t *image)
   Paint_DrawString_j(XSTART_HUMI+(2*WITH_TEMP_HUMI_FONT), YSTART_HUMI+2, "%",
                      &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
 
-  Paint_DrawString_j(70, YSTART_CO2_PPM+85, "CO² ppm",
+  Paint_DrawString_j(70, YSTART_CO2_PPM+78, "CO² ppm",
                      &CO2ppm25NotoSansMedium, 0, BLACK, WHITE);
 
   draw_slider_border(image, 0, 180, 200, 18, BLACK, WHITE);
