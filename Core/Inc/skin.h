@@ -32,6 +32,6 @@ void skin_prepare(uint8_t *gImage);
 
 void skin_update(uint8_t *gImage, uint16_t co2_ppm,
 		 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
-		 bool powered);
+		 bool powered, int debug_counter, int debug_bat_voltage);
 
 #endif /* __SKIN_H */

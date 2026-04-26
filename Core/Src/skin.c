@@ -128,7 +128,7 @@ void skin_prepare(uint8_t *image)
 
 void skin_update(uint8_t *image, uint16_t co2_ppm,
                  uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
-                 bool powered)
+                 bool powered, int debug_counter, int debug_bat_voltage)
 {
   UNUSED(image);
   static uint32_t counter = 0;
@@ -201,13 +201,17 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
 
   /* Debug */
   printf("counter %ld\n", counter);
-  snprintf(counter_str, STR_DISP_LEN, "%ld", counter);
   Paint_ClearWindows(1, 166, 1+font12.max_width*12, 166+font12.height, WHITE);
-  Paint_DrawString_j(1, 166, counter_str,
-		     &font12, 0, BLACK, WHITE);
+  if (debug_counter) {
+    snprintf(counter_str, STR_DISP_LEN, "%ld", counter);
+    Paint_DrawString_j(1, 166, counter_str,
+                       &font12, 0, BLACK, WHITE);
+  }
 
-  snprintf(vbat_mv_str, STR_DISP_LEN, "%ld mV", vbat_mv);
   Paint_ClearWindows(150, 166, 150+font12.max_width*7, 166+font12.height, WHITE);
-  Paint_DrawString_j(150, 166, vbat_mv_str,
-		     &font12, 0, BLACK, WHITE);
+  if (debug_bat_voltage) {
+    snprintf(vbat_mv_str, STR_DISP_LEN, "%ld mV", vbat_mv);
+    Paint_DrawString_j(150, 166, vbat_mv_str,
+                       &font12, 0, BLACK, WHITE);
+  }
 }

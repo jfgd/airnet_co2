@@ -327,7 +327,7 @@ static void read_data_and_draw(int display)
   /* nPGOOD from battery charger, low when USB plugged */
   int powered = HAL_GPIO_ReadPin(nPGOOD_GPIO_Port, nPGOOD_Pin) ? 0 : 1;;
 
-  TS(skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv, powered)); /* 260 ms ! */
+  TS(skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv, powered, g_conf.debug_counter, g_conf.debug_bat_voltage)); /* 260 ms ! */
 
   printf("Loop duration : %ld ms\n", rtc_get_ms() - ts_ms_start);
 
@@ -467,6 +467,7 @@ int main(void)
     }
     if (long_press) {
       menu_enter();
+      skin_prepare(gImage);
       continue;
     }
     /* USER CODE END WHILE */
