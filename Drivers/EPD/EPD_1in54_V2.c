@@ -227,6 +227,33 @@ static void EPD_1IN54_V2_SetCursor(UWORD Xstart, UWORD Ystart)
     EPD_1IN54_V2_SendData((Ystart >> 8) & 0xFF);
 }
 
+/* Send image to EPD buffer rotated by 270° */
+static void EPD_1IN54_V2_Image(UBYTE *Image)
+{
+    UWORD Width, Height;
+    Width = (EPD_1IN54_V2_WIDTH % 8 == 0)? (EPD_1IN54_V2_WIDTH / 8 ): (EPD_1IN54_V2_WIDTH / 8 + 1);
+    Height = EPD_1IN54_V2_HEIGHT;
+
+    for (UWORD j = 0; j < Height; j++) {
+        for (UWORD i = 0; i < Width; i++) {
+            uint8_t out = 0;
+            for (UWORD bit = 0; bit < 8; bit++) {
+                // Physical pixel column
+                UWORD px = i * 8 + bit;
+
+                // 270° inverse transform: logical x = (Height-1) - j, logical y = px
+                UWORD lx = (Height - 1) - j;
+                UWORD ly = px;
+
+                UBYTE src = Image[ly * Width + lx / 8];
+                if (src & (0x80 >> (lx % 8)))
+                    out |= (0x80 >> bit);
+            }
+            EPD_1IN54_V2_SendData(out);
+        }
+    }
+}
+
 /******************************************************************************
 function :	Initialize the e-Paper register
 parameter:
@@ -327,18 +354,8 @@ parameter:
 ******************************************************************************/
 void EPD_1IN54_V2_DisplayAsync(UBYTE *Image)
 {
-    UWORD Width, Height;
-    Width = (EPD_1IN54_V2_WIDTH % 8 == 0)? (EPD_1IN54_V2_WIDTH / 8 ): (EPD_1IN54_V2_WIDTH / 8 + 1);
-    Height = EPD_1IN54_V2_HEIGHT;
-
-    UDOUBLE Addr = 0;
     EPD_1IN54_V2_SendCommand(0x24);
-    for (UWORD j = 0; j < Height; j++) {
-        for (UWORD i = 0; i < Width; i++) {
-            Addr = i + j * Width;
-            EPD_1IN54_V2_SendData(Image[Addr]);
-        }
-    }
+    EPD_1IN54_V2_Image(Image);
     EPD_1IN54_V2_TurnOnDisplayAsync();
 }
 
@@ -359,25 +376,12 @@ parameter:
 ******************************************************************************/
 void EPD_1IN54_V2_DisplayPartBaseImage(UBYTE *Image)
 {
-    UWORD Width, Height;
-    Width = (EPD_1IN54_V2_WIDTH % 8 == 0)? (EPD_1IN54_V2_WIDTH / 8 ): (EPD_1IN54_V2_WIDTH / 8 + 1);
-    Height = EPD_1IN54_V2_HEIGHT;
-
-    UDOUBLE Addr = 0;
     EPD_1IN54_V2_SendCommand(0x24);
-    for (UWORD j = 0; j < Height; j++) {
-        for (UWORD i = 0; i < Width; i++) {
-            Addr = i + j * Width;
-            EPD_1IN54_V2_SendData(Image[Addr]);
-        }
-    }
+    EPD_1IN54_V2_Image(Image);
+
     EPD_1IN54_V2_SendCommand(0x26);
-    for (UWORD j = 0; j < Height; j++) {
-        for (UWORD i = 0; i < Width; i++) {
-            Addr = i + j * Width;
-            EPD_1IN54_V2_SendData(Image[Addr]);
-        }
-    }
+    EPD_1IN54_V2_Image(Image);
+
     EPD_1IN54_V2_TurnOnDisplayPart();
 }
 
@@ -387,18 +391,9 @@ parameter:
 ******************************************************************************/
 void EPD_1IN54_V2_DisplayPartAsync(UBYTE *Image)
 {
-    UWORD Width, Height;
-    Width = (EPD_1IN54_V2_WIDTH % 8 == 0)? (EPD_1IN54_V2_WIDTH / 8 ): (EPD_1IN54_V2_WIDTH / 8 + 1);
-    Height = EPD_1IN54_V2_HEIGHT;
-	
-    UDOUBLE Addr = 0;
     EPD_1IN54_V2_SendCommand(0x24);
-    for (UWORD j = 0; j < Height; j++) {
-        for (UWORD i = 0; i < Width; i++) {
-            Addr = i + j * Width;
-            EPD_1IN54_V2_SendData(Image[Addr]);
-        }
-    }
+    EPD_1IN54_V2_Image(Image);
+
     EPD_1IN54_V2_TurnOnDisplayPartAsync();
 }
 
