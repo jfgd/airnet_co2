@@ -424,26 +424,25 @@ void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius,
     //Cumulative error,judge the next point of the logo
     int16_t Esp = 3 - (Radius << 1 );
 
-    int16_t sCountY;
     if (Draw_Fill == DRAW_FILL_FULL) {
-        while (XCurrent <= YCurrent ) { //Realistic circles
-            for (sCountY = XCurrent; sCountY <= YCurrent; sCountY ++ ) {
-                Paint_DrawPoint(X_Center + XCurrent, Y_Center + sCountY, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//1
-                Paint_DrawPoint(X_Center - XCurrent, Y_Center + sCountY, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//2
-                Paint_DrawPoint(X_Center - sCountY, Y_Center + XCurrent, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//3
-                Paint_DrawPoint(X_Center - sCountY, Y_Center - XCurrent, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//4
-                Paint_DrawPoint(X_Center - XCurrent, Y_Center - sCountY, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//5
-                Paint_DrawPoint(X_Center + XCurrent, Y_Center - sCountY, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//6
-                Paint_DrawPoint(X_Center + sCountY, Y_Center - XCurrent, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//7
-                Paint_DrawPoint(X_Center + sCountY, Y_Center + XCurrent, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);
-            }
-            if (Esp < 0 )
-                Esp += 4 * XCurrent + 6;
+        int16_t x = 0;
+        int16_t y = Radius;
+
+        while (x <= y) {
+            // Each iteration covers 4 horizontal spans by symmetry:
+            // two spanning the "wide" part (y extent), two the "narrow" (x extent)
+            Paint_SetPixelHLine(X_Center - y, X_Center + y, Y_Center - x - 1, Color);
+            Paint_SetPixelHLine(X_Center - y, X_Center + y, Y_Center + x - 1, Color);
+            Paint_SetPixelHLine(X_Center - x, X_Center + x, Y_Center - y - 1, Color);
+            Paint_SetPixelHLine(X_Center - x, X_Center + x, Y_Center + y - 1, Color);
+
+            if (Esp < 0)
+                Esp += 4 * x + 6;
             else {
-                Esp += 10 + 4 * (XCurrent - YCurrent );
-                YCurrent --;
+                Esp += 10 + 4 * (x - y);
+                y--;
             }
-            XCurrent ++;
+            x++;
         }
     } else { //Draw a hollow circle
         while (XCurrent <= YCurrent ) {
