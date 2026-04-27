@@ -326,6 +326,18 @@ void Paint_DrawLine(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
         return;
     }
 
+    if (Ystart == Yend && Line_Style == LINE_STYLE_SOLID) {
+        /* Horizontal line we can optimize */
+        Paint_SetPixelHLine(Xstart, Xend, Ystart, Color); /* center line */
+        for (int l = 1 ; l <= Line_width/2 ; l++) {
+            Paint_SetPixelHLine(Xstart, Xend, Ystart + l, Color);
+            if (l != 1 || Line_width % 2 == 1) {
+                Paint_SetPixelHLine(Xstart, Xend, Ystart - l, Color);
+            }
+        }
+        return;
+    }
+
     UWORD Xpoint = Xstart;
     UWORD Ypoint = Ystart;
     int dx = (int)Xend - (int)Xstart >= 0 ? Xend - Xstart : Xstart - Xend;
