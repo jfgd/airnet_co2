@@ -19,8 +19,10 @@ supply provided by the TPS63900.
 
 ## Images
 
+![Front](/images/airnet_co2_rev01_front_wepd.jpg)
+
+![Back](/images/airnet_co2_rev01_back_wbat.jpg)
+
 ![Top kicad](/images/airnet_co2_rev0_1_top.png)
 
 ![Bottom kicad](/images/airnet_co2_rev0_1_bottom.png)
-
-![Top irl](/images/airnet_co2_rev01_irl.jpg)
