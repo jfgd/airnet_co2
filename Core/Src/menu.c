@@ -147,11 +147,12 @@ enum item_value {
 };
 
 #define HEADER_HEIGHT 22
-#define HEADER_LINE_WIDTH 2
+#define HEADER_LINE_WIDTH 3
 #define SELECT_ROW_HEIGHT 22
 #define SELECT_ROW_LINE_WIDTH 1
 #define TEXT_OFFSET_Y 6
 #define TEXT_OFFSET_X 15
+#define TEXT_OFFSET_HELP_X 5
 
 static void menu_draw_base_image(void)
 {
@@ -212,13 +213,14 @@ static void menu_clear(void)
 
 	/* Help zone */
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-	Paint_ClearWindows(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
+	Paint_ClearWindows(TEXT_OFFSET_HELP_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
 			   y + TEXT_OFFSET_Y + font12.height*2, WHITE);
 
 }
 
 
-static int items_len(struct item *items) {
+static int items_len(struct item *items)
+{
 	int len = 0;
 
 	for (int i = 0 ; i < MAX_LIST_SIZE ; i++) {
@@ -232,11 +234,30 @@ static int items_len(struct item *items) {
 }
 
 
+static void wheel_draw_text(char *row1, char *row2, char *row3)
+{
+	int y = 0;
+
+	/* Wheel 1st row */
+	y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
+	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, row1,
+			   &font12, 0, BLACK, WHITE);
+
+	/* Wheel 2nd row */
+	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, row2,
+			   &font12, 0, WHITE, BLACK);
+
+	/* Wheel 3rd row */
+	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, row3,
+			   &font12, 0, BLACK, WHITE);
+}
+
+
 static void menu_draw_main(int menu_idx, int item_idx)
 {
 	int y = 0;
-	struct menu_list *m;
-	struct item *itm;
 	int ilen = 0;
 
 	if (item_idx == UNSELECTED) {
@@ -248,26 +269,12 @@ static void menu_draw_main(int menu_idx, int item_idx)
 		Paint_DrawString_EN(70, y, "MENU", &Font20, BLACK, WHITE);
 
 		/* Select wheel */
-		y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
-		printf("menu: menu_idx %d UNSLECTED\n", menu_idx);
-		m = &g_menu[mod(menu_idx - 1, MENU_LENGTH)];
-		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
-				    &font12, 0, BLACK, WHITE);
-		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-		m = &g_menu[menu_idx];
-		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
-				    &font12, 0, WHITE, BLACK);
-		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-		m = &g_menu[mod(menu_idx + 1, MENU_LENGTH)];
-		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, m->name,
-				    &font12, 0, BLACK, WHITE);
+		printf("menu: menu_idx %d UNSELECTED\n", menu_idx);
+		wheel_draw_text(
+			g_menu[mod(menu_idx - 1, MENU_LENGTH)].name,
+			g_menu[menu_idx].name,
+			g_menu[mod(menu_idx + 1, MENU_LENGTH)].name);
 
-		/* Help */
-		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-		m = &g_menu[menu_idx];
-		Paint_DrawString_j(TEXT_OFFSET_X, y+ TEXT_OFFSET_Y,
-				   g_menu[menu_idx].help,
-				   &font12, 0, BLACK, WHITE);
 	} else {
 		/* Sub menu */
 		if (menu_idx < 0 || menu_idx > MENU_LENGTH) {
@@ -280,23 +287,28 @@ static void menu_draw_main(int menu_idx, int item_idx)
 
 		ilen = items_len(g_menu[menu_idx].items) + 1;
 		printf("items len %d\n", ilen);
-		//itm = &g_menu[menu_idx].items[item_idx];
 
 		/* Select wheel */
-		y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
 		printf("menu: menu_idx %d item_idx %d\n", menu_idx, item_idx);
-		itm = &g_menu[menu_idx].items[mod(item_idx - 1, ilen)];
-		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
-				    &font12, 0, BLACK, WHITE);
-		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-		itm = &g_menu[menu_idx].items[item_idx];
-		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
-				    &font12, 0, WHITE, BLACK);
-		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-		itm = &g_menu[menu_idx].items[mod(item_idx + 1, ilen)];
-		Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, itm->name,
-				    &font12, 0, BLACK, WHITE);
+		char *row1 = g_menu[menu_idx].items[mod(item_idx - 1, ilen)].name;
+		char *row2 = g_menu[menu_idx].items[item_idx].name;
+		char *row3 = g_menu[menu_idx].items[mod(item_idx + 1, ilen)].name;
+		char back_str[] = "Back <-";
+		if (row1 == NULL)
+			row1 = back_str;
+		if (row2 == NULL)
+			row2 = back_str;
+		if (row3 == NULL)
+			row3 = back_str;
+		wheel_draw_text(row1, row2, row3);
 	}
+
+	/* Help */
+	y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
+	y += 3*SELECT_ROW_LINE_WIDTH + 3*SELECT_ROW_HEIGHT;
+	Paint_DrawString_j(TEXT_OFFSET_HELP_X, y+ TEXT_OFFSET_Y,
+			   g_menu[menu_idx].help,
+			   &font12, 0, BLACK, WHITE);
 }
 
 enum menu_handle_ret {
@@ -326,9 +338,9 @@ static enum menu_handle_ret menu_handle_button_pressed(
 			return NEED_REFRESH;
 		}
 	} else {
-		int items_len = (sizeof(g_menu[*menu_idx].items) / sizeof(g_menu[*menu_idx].items[0]));
+		int ilen = items_len(g_menu[*menu_idx].items) + 1;
 		if (button_pressed == SHORT_PRESS) {
-			*item_idx = (*item_idx + 1) % items_len;
+			*item_idx = (*item_idx + 1) % ilen;
 			return NEED_REFRESH;
 		} else if (button_pressed == LONG_PRESS) {
 			if (g_menu[*menu_idx].items[*item_idx].name == NULL) {
