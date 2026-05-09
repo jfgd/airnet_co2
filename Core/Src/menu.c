@@ -313,7 +313,10 @@ static enum menu_handle_ret menu_handle_button_pressed(
 	if (*item_idx == UNSELECTED) {
 		/* Main MENU */
 		if (button_event == BUTTON_EVENT_SINGLE_PRESS) {
-			*menu_idx = (*menu_idx + 1) % MENU_LENGTH;
+			*menu_idx = mod(*menu_idx + 1, MENU_LENGTH);
+			return NEED_REFRESH;
+		} else if (button_event == BUTTON_EVENT_DOUBLE_PRESS) {
+			*menu_idx = mod(*menu_idx - 1, MENU_LENGTH);
 			return NEED_REFRESH;
 		} else if (button_event == BUTTON_EVENT_LONG_PRESS) {
 			switch(g_menu[*menu_idx].type) {
@@ -328,7 +331,10 @@ static enum menu_handle_ret menu_handle_button_pressed(
 	} else {
 		int ilen = items_len(g_menu[*menu_idx].items) + 1;
 		if (button_event == BUTTON_EVENT_SINGLE_PRESS) {
-			*item_idx = (*item_idx + 1) % ilen;
+			*item_idx = mod(*item_idx + 1, ilen);
+			return NEED_REFRESH;
+		} else if (button_event == BUTTON_EVENT_DOUBLE_PRESS) {
+			*item_idx = mod(*item_idx - 1, ilen);
 			return NEED_REFRESH;
 		} else if (button_event == BUTTON_EVENT_LONG_PRESS) {
 			if (g_menu[*menu_idx].items[*item_idx].name == NULL) {
@@ -351,6 +357,8 @@ void menu_enter(void)
 	int menu_idx = 0;
 	int item_idx = UNSELECTED;
 	enum menu_handle_ret ret;
+
+	button_init(&g_button_fsm);
 	printf("menu: Init EPD %ld ms %p %ld\n", rtc_get_ms(), gImage, g_ts_ms_last_button_pressed);
 	EPD_1IN54_V2_Init();
 	//EPD_1IN54_V2_Clear();
