@@ -25,6 +25,7 @@
 
 #include "skin.h"
 #include "menu.h"
+#include "button_menu.h"
 
 #include "stcc4_i2c.h"
 #include "sensirion_i2c_hal.h"
@@ -68,6 +69,7 @@ UART_HandleTypeDef huart1;
 volatile uint32_t g_ts_ms_last_button_pressed = 0;
 volatile uint32_t g_ts_ms_previous_button_pressed = 0;
 volatile int g_button_pressed_flag = 0;
+volatile struct button_fsm g_button_fsm;
 
 uint8_t gImage[5000];
 
@@ -186,10 +188,19 @@ uint32_t rtc_get_ms(void)
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == BUTTON_Pin) {
+    uint32_t ts = rtc_get_ms();
+    button_isr(&g_button_fsm, 0, ts);
+
     g_ts_ms_previous_button_pressed = g_ts_ms_last_button_pressed;
-    g_ts_ms_last_button_pressed = rtc_get_ms();
+    g_ts_ms_last_button_pressed = ts;
     g_button_pressed_flag = 1;
-    printf("button pressed %ld %ld\n", g_ts_ms_last_button_pressed, g_ts_ms_previous_button_pressed);
+  }
+}
+
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == BUTTON_Pin) {
+    button_isr(&g_button_fsm, 1, rtc_get_ms());
   }
 }
 
@@ -345,6 +356,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   uint32_t ts_ms_start = 0;
+  uint32_t ts_ms_loop = 0;
   int16_t err = 0;
   uint32_t stcc4_product_id;
   uint64_t stcc4_sn;
@@ -378,6 +390,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
+
+  button_init(&g_button_fsm);
 
   stcc4_init(STCC4_I2C_ADDR_64);
 
@@ -431,6 +445,7 @@ int main(void)
   TS(skin_prepare(gImage));     /* 12 ms */
 
   /* Do a first read and display */
+  ts_ms_loop = rtc_get_ms();
   read_data_and_draw(0);
 
   /* Schedule RTC wake up */
@@ -451,35 +466,25 @@ int main(void)
   printf("\n\n");
   while (1)
   {
-    int long_press = 0;
-    if (g_button_pressed_flag) {
-      uint32_t press_time_ms = 0;
-      g_button_pressed_flag = 0;
-      while (BUTTON_GPIO_STATE() == 0) {
-        press_time_ms = rtc_get_ms() - g_ts_ms_last_button_pressed;
-        if (press_time_ms > 800) {
-          long_press = 1;
-          printf("Long press button %ld\n", press_time_ms);
-          break;
-        }
-        HAL_Delay(10);
-      }
-    }
-    if (long_press) {
+
+    if (BUTTON_GPIO_STATE() == 0
+        && (rtc_get_ms() - g_ts_ms_last_button_pressed) > 900) {
       menu_enter();
       skin_prepare(gImage);
+      /* continue; */
+    }
+
+    if ((rtc_get_ms() - ts_ms_loop) < (uint32_t)(g_conf.refresh_rate_sec  * 1000)) {
+      printf("Looped to soon skip\n");
+      HAL_Delay(10);
       continue;
     }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    /* uint32_t start_ms = rtc_get_ms(); */
-    /* if ((start_ms - ts_ms_sensors_read) < 4900) { */
-    /*   printf("Looped to soon skip\n"); */
-    /*   HAL_Delay(200); */
-    /*   continue; */
-    /* } */
 
+    ts_ms_loop = rtc_get_ms();
     printf("\n\n");
 
     read_data_and_draw(1);
@@ -496,6 +501,7 @@ int main(void)
     //epd_power_off();
 
     /* Going to sleep */
+    printf("Going sleep 2 %ld ms\n", rtc_get_ms());
     enter_stop2();
 
   }
@@ -937,7 +943,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : BUTTON_Pin */
   GPIO_InitStruct.Pin = BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 

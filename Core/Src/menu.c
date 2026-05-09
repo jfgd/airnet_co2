@@ -26,10 +26,12 @@
 #include "EPD_1in54_V2.h"
 #include "GUI_Paint.h"
 #include "menu.h"
+#include "button_menu.h"
 
 extern volatile uint32_t g_ts_ms_last_button_pressed;
 extern volatile uint32_t g_ts_ms_previous_button_pressed;
 extern volatile int g_button_pressed_flag;
+extern volatile struct button_fsm g_button_fsm;
 
 extern UBYTE gImage[];
 
@@ -48,13 +50,6 @@ struct conf g_conf = {
 	.debug_bat_voltage = 0,
 };
 
-
-/* struct s_menu; */
-
-/* enum menu_type { */
-/* 	SUB_MENU = 1, */
-/* 	SELECTION_LIST = 2, */
-/* }; */
 
 enum value_type {
 	SELECT = 1,
@@ -133,13 +128,6 @@ struct menu_list g_menu[] = {
 
 
 #define MENU_LENGTH (int)(sizeof(g_menu) / sizeof(g_menu[0]))
-
-enum menu_button {
-	NONE = 0,
-	SHORT_PRESS = 1,
-	DOUBLE_PRESS = 2,
-	LONG_PRESS =3,
-};
 
 enum item_value {
 	UNSELECTED = -2,
@@ -318,16 +306,16 @@ enum menu_handle_ret {
 };
 
 static enum menu_handle_ret menu_handle_button_pressed(
-	enum menu_button button_pressed,
+	enum button_event button_event,
 	int *menu_idx, int *item_idx)
 {
-	printf("menu: handle %d %d %d\n", button_pressed, *menu_idx, *item_idx);
+	printf("menu: handle %d %d %d\n", button_event, *menu_idx, *item_idx);
 	if (*item_idx == UNSELECTED) {
 		/* Main MENU */
-		if (button_pressed == SHORT_PRESS) {
+		if (button_event == BUTTON_EVENT_SINGLE_PRESS) {
 			*menu_idx = (*menu_idx + 1) % MENU_LENGTH;
 			return NEED_REFRESH;
-		} else if (button_pressed == LONG_PRESS) {
+		} else if (button_event == BUTTON_EVENT_LONG_PRESS) {
 			switch(g_menu[*menu_idx].type) {
 			case BACK:
 				return EXIT;
@@ -339,10 +327,10 @@ static enum menu_handle_ret menu_handle_button_pressed(
 		}
 	} else {
 		int ilen = items_len(g_menu[*menu_idx].items) + 1;
-		if (button_pressed == SHORT_PRESS) {
+		if (button_event == BUTTON_EVENT_SINGLE_PRESS) {
 			*item_idx = (*item_idx + 1) % ilen;
 			return NEED_REFRESH;
-		} else if (button_pressed == LONG_PRESS) {
+		} else if (button_event == BUTTON_EVENT_LONG_PRESS) {
 			if (g_menu[*menu_idx].items[*item_idx].name == NULL) {
 				/* Special for "back" */
 				*item_idx = UNSELECTED;
@@ -363,7 +351,6 @@ void menu_enter(void)
 	int menu_idx = 0;
 	int item_idx = UNSELECTED;
 	enum menu_handle_ret ret;
-	enum menu_button button_pressed = NONE;
 	printf("menu: Init EPD %ld ms %p %ld\n", rtc_get_ms(), gImage, g_ts_ms_last_button_pressed);
 	EPD_1IN54_V2_Init();
 	//EPD_1IN54_V2_Clear();
@@ -378,27 +365,21 @@ void menu_enter(void)
 	/* EPD_1IN54_V2_DisplayPart(gImage); */
 
 	while (1) {
-		if (g_button_pressed_flag) {
-			button_pressed = SHORT_PRESS;
-			uint32_t press_time_ms = 0;
-			g_button_pressed_flag = 0;
-			while (BUTTON_GPIO_STATE() == 0) {
-				press_time_ms =
-					rtc_get_ms() - g_ts_ms_last_button_pressed;
-				if (press_time_ms > 800) {
-					button_pressed = LONG_PRESS;
-					printf("menu: Long press button %ld\n",
-					       press_time_ms);
-					break;
-				}
-				HAL_Delay(10);
-			}
-			printf("menu: BUTTON %d\n", button_pressed);
-		}
+		enum button_event evt = button_tick(&g_button_fsm, rtc_get_ms());
 
-		if (button_pressed) {
+		if (evt != BUTTON_EVENT_NONE) {
+			if (evt == BUTTON_EVENT_SINGLE_PRESS) {
+				printf("button SHORT PRESS fsm %d\n",
+				       g_button_fsm.state);
+			} else if (evt == BUTTON_EVENT_DOUBLE_PRESS){
+				printf("button DOUBLE PRESS fsm %d\n",
+				       g_button_fsm.state);
+			} else if (evt == BUTTON_EVENT_LONG_PRESS){
+				printf("button LONG PRESS fsm %d\n",
+				       g_button_fsm.state);
+			}
 			ret = menu_handle_button_pressed(
-				button_pressed, &menu_idx, &item_idx);
+				evt, &menu_idx, &item_idx);
 			if (ret == NEED_REFRESH) {
 				menu_clear();
 				menu_draw_main(menu_idx, item_idx);
@@ -406,7 +387,8 @@ void menu_enter(void)
 			} else if (ret == EXIT) {
 				break;
 			}
-			button_pressed = NONE;
+		} else {
+			HAL_Delay(10);
 		}
 
 		if (rtc_get_ms() - g_ts_ms_last_button_pressed > 30000) {
