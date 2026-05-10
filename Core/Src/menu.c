@@ -23,6 +23,7 @@
   ******************************************************************************
   */
 
+#include <string.h>
 #include "EPD_1in54_V2.h"
 #include "GUI_Paint.h"
 #include "menu.h"
@@ -60,6 +61,7 @@ enum value_type {
 };
 
 #define MAX_LIST_SIZE 6
+#define MAX_ITEM_NAME_LEN 32
 
 struct item {
 	int value;
@@ -246,27 +248,44 @@ static int items_len(struct item *items)
 	return len;
 }
 
+static void wheel_draw_text_row(int row, char *str)
+{
+	int y = HEADER_HEIGHT + HEADER_LINE_WIDTH; /* Wheel 1st row */
+	int fcolor = BLACK, bcolor = WHITE;
+
+	if (row < 1 || row > 3) {
+		printf("Error wrong row num %d\n", row);
+	}
+
+	if (row >= 2) {
+		/* Wheel 2nd row */
+		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	}
+
+	if (row == 2) {
+		fcolor = WHITE;
+		bcolor = BLACK;
+	}
+
+	if (row >= 3) {
+		/* Wheel 3rd row */
+		y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	}
+
+	if (str == NULL) {
+		str = "Back <-";
+	}
+
+	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, str,
+			   &font12, 0, fcolor, bcolor);
+}
 
 static void wheel_draw_text(char *row1, char *row2, char *row3)
 {
-	int y = 0;
-
-	/* Wheel 1st row */
-	y += HEADER_HEIGHT + HEADER_LINE_WIDTH;
-	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, row1,
-			   &font12, 0, BLACK, WHITE);
-
-	/* Wheel 2nd row */
-	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, row2,
-			   &font12, 0, WHITE, BLACK);
-
-	/* Wheel 3rd row */
-	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
-	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, row3,
-			   &font12, 0, BLACK, WHITE);
+	wheel_draw_text_row(1, row1);
+	wheel_draw_text_row(2, row2);
+	wheel_draw_text_row(3, row3);
 }
-
 
 static void menu_draw_main(int menu_idx, int item_idx)
 {
@@ -303,17 +322,19 @@ static void menu_draw_main(int menu_idx, int item_idx)
 
 		/* Select wheel */
 		printf("menu: menu_idx %d item_idx %d\n", menu_idx, item_idx);
-		char *row1 = g_menu[menu_idx].items[mod(item_idx - 1, ilen)].name;
-		char *row2 = g_menu[menu_idx].items[item_idx].name;
-		char *row3 = g_menu[menu_idx].items[mod(item_idx + 1, ilen)].name;
-		char back_str[] = "Back <-";
-		if (row1 == NULL)
-			row1 = back_str;
-		if (row2 == NULL)
-			row2 = back_str;
-		if (row3 == NULL)
-			row3 = back_str;
-		wheel_draw_text(row1, row2, row3);
+		for (int i = -1 ; i <= 1 ; i++) {
+			int idx = mod(item_idx + i, ilen);
+			char sname[MAX_ITEM_NAME_LEN] = {0};
+			char *name = g_menu[menu_idx].items[idx].name;
+			if (name && (*g_menu[menu_idx].value
+				     == g_menu[menu_idx].items[idx].value)) {
+				/* Item selected add '✔' */
+				strncpy(sname, name, MAX_ITEM_NAME_LEN);
+				strncat(sname, " \xC2\xA4", MAX_ITEM_NAME_LEN-2);
+				name = sname;
+			}
+			wheel_draw_text_row(i + 2, name);
+		}
 	}
 
 	/* Help */

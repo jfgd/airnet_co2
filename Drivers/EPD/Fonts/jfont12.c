@@ -1566,13 +1566,28 @@ static const uint8_t fontTable9660[] =
 	
 };
 
+/* font2bytes.py --ttf-input-file ./fonts/NotoSansSymbols2-Regular.ttf --height 12 --format jFont --variable-width --font-offset 0 --y-offset -4 -b tmp --ascii-range 10004 */
+static const uint8_t fontTable10004[] = 
+{
+	/* ASCII: 10004 "✔" (11 pixels wide) */
+	0x00, 0x00, 0x00, 
+	0x60, 0x00, 0xc0, 
+	0x01, 0xc0, 0x63, 
+	0x80, 0x67, 0x00, 
+	0x7e, 0x00, 0x7c, 
+	0x00, 0x78, 0x00, 
+	0x70, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 
+	
+};
+
 jFont font12 = {
 	.max_width = 7, /* Maximum width */
 	.height = 12, /* Height */
 	.default_char = 32, /* Default: ' ' */
 	.min_char = 32, /* Min: ' ' */
-	.max_char = 0xA3, /* Max: '▼' */
-	.nb_glyphs = 98,
+	.max_char = 0xA4, /* Max: '✔' */
+	.nb_glyphs = 99,
 	.glyphs = {
 		{
 			.c = 32, /* ' ' */
@@ -2063,6 +2078,11 @@ jFont font12 = {
 			.c = 0xA3, /* '▼' */
 			.width = 11,
 			.table = fontTable9660,
+		},
+		{
+			.c = 0xA4, /* '✔' */
+			.width = 11,
+			.table = fontTable10004,
 		},
 	}
 };
