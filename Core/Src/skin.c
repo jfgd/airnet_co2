@@ -38,7 +38,7 @@
 #define XSTART_CO2_PPM 8
 #define YSTART_CO2_PPM 62
 
-#define WITH_TEMP_HUMI_FONT 27
+#define WIDTH_TEMP_HUMI_FONT 27
 /* = jfont_get_width(&Digits39NotoSansSemiCondensedBold, '8') */
 
 /* draw_slider_border()
@@ -111,12 +111,12 @@ static void skin_temp_rh_top_prepare(uint8_t *image, int fcolor, int bcolor)
 {
   UNUSED(image);
   Paint_DrawjChar(0, YSTART_TEMP, 'T', &Thermometer39, fcolor, bcolor);
-  Paint_DrawjChar(XSTART_HUMI+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20, 'D',
+  Paint_DrawjChar(XSTART_HUMI+(2*WIDTH_TEMP_HUMI_FONT), YSTART_TEMP+20, 'D',
                   &Droplet20, fcolor, bcolor);
 
-  Paint_DrawString_j(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+2, "°C",
+  Paint_DrawString_j(XSTART_TEMP+(2*WIDTH_TEMP_HUMI_FONT), YSTART_TEMP+2, "°C",
                      &Digits25NotoSansSemiCondensedBold, 0, fcolor, bcolor);
-  Paint_DrawString_j(XSTART_HUMI+(2*WITH_TEMP_HUMI_FONT), YSTART_HUMI+2, "%",
+  Paint_DrawString_j(XSTART_HUMI+(2*WIDTH_TEMP_HUMI_FONT), YSTART_HUMI+2, "%",
                      &Digits25NotoSansSemiCondensedBold, 0, fcolor, bcolor);
 
 }
@@ -152,20 +152,20 @@ static void skin_temp_rh_top_update(uint8_t *image, int fcolor, int bcolor,
   snprintf(temperature_str1, STR_DISP_LEN, "%ld", temperature / 100);
   snprintf(temperature_str2, STR_DISP_LEN, ".%ld", (temperature - ((temperature / 100)*100))/10);
   Paint_ClearWindows(XSTART_TEMP, YSTART_TEMP,
-                     XSTART_TEMP + WITH_TEMP_HUMI_FONT * 2,
+                     XSTART_TEMP + WIDTH_TEMP_HUMI_FONT * 2,
                      YSTART_TEMP + Digits39NotoSansSemiCondensedBold.height, bcolor);
-  Paint_ClearWindows(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20,
-                     XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT) + 11 + 6,
+  Paint_ClearWindows(XSTART_TEMP+(2*WIDTH_TEMP_HUMI_FONT), YSTART_TEMP+20,
+                     XSTART_TEMP+(2*WIDTH_TEMP_HUMI_FONT) + 11 + 6,
                      YSTART_TEMP+20 + Digits25NotoSansSemiCondensedBold.height, bcolor);
   Paint_DrawString_j(XSTART_TEMP, YSTART_TEMP, temperature_str1,
                      &Digits39NotoSansSemiCondensedBold, 0, fcolor, bcolor);
-  Paint_DrawString_j(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20, temperature_str2,
+  Paint_DrawString_j(XSTART_TEMP+(2*WIDTH_TEMP_HUMI_FONT), YSTART_TEMP+20, temperature_str2,
                      &Digits25NotoSansSemiCondensedBold, 0, fcolor, bcolor);
 
   /* Humidity */
   snprintf(humidity_str, STR_DISP_LEN, "%ld", humidity);
   Paint_ClearWindows(XSTART_HUMI, YSTART_HUMI,
-                     XSTART_HUMI + WITH_TEMP_HUMI_FONT * 2,
+                     XSTART_HUMI + WIDTH_TEMP_HUMI_FONT * 2,
                      YSTART_HUMI + Digits39NotoSansSemiCondensedBold.height, bcolor);
   Paint_DrawString_j(XSTART_HUMI, YSTART_HUMI, humidity_str,
                      &Digits39NotoSansSemiCondensedBold, 0, fcolor, bcolor);
