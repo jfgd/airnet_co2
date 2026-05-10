@@ -87,6 +87,7 @@ C_SOURCES += Drivers/EPD/Fonts/CO2ppm25NotoSansMedium.c
 C_SOURCES += Drivers/EPD/Fonts/Thermometer39.c
 C_SOURCES += Drivers/EPD/Fonts/Droplet20Regular.c
 C_SOURCES += Drivers/EPD/Fonts/Lightning27Regular.c
+C_SOURCES += Drivers/EPD/Fonts/EmojiFaces.c
 
 # ASM sources
 ASM_SOURCES =  \

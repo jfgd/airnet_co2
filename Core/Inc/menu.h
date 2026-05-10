@@ -35,6 +35,10 @@ enum conf_temperature_unit {
 enum conf_skin_value {
 	CONF_SKIN_SLIDER = 0,
 	CONF_SKIN_SLIDER_INVERTED,
+	CONF_SKIN_EMOJI,
+	CONF_SKIN_EMOJI_INVERTED,
+	CONF_SKIN_SLIDER_EMOJI,
+	CONF_SKIN_SLIDER_EMOJI_INVERTED,
 };
 
 /* Only int allowed */

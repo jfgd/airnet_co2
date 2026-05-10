@@ -47,7 +47,7 @@ static int mod(int a, int b)
 /* Default values */
 struct conf g_conf = {
 	.refresh_rate_sec = 5,
-	.skin = CONF_SKIN_SLIDER,
+	.skin = CONF_SKIN_EMOJI,
 	.debug_counter = 0,
 	.debug_bat_voltage = 0,
 	.temperature_unit = CONF_TEMP_CELSIUS,
@@ -100,8 +100,16 @@ struct menu_list g_menu[] = {
 		.items = {
 			{ .value = CONF_SKIN_SLIDER,
 			  .name = "Slider" },
+			{ .value = CONF_SKIN_EMOJI,
+			  .name = "Emoji" },
+			{ .value = CONF_SKIN_SLIDER_EMOJI,
+			  .name = "Slider + Emoji" },
 			{ .value = CONF_SKIN_SLIDER_INVERTED,
-			  .name = "Slider Inverted Color" },
+			  .name = "Slider (Inverted Color)" },
+			{ .value = CONF_SKIN_EMOJI_INVERTED,
+			  .name = "Emoji (Inverted Color)" },
+			{ .value = CONF_SKIN_SLIDER_EMOJI_INVERTED,
+			  .name = "Slider + Emoji (Inv. Color)" },
 		},
 	},
 	{
