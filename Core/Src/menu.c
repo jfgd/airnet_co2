@@ -152,6 +152,7 @@ enum item_value {
 #define HEADER_LINE_WIDTH 3
 #define SELECT_ROW_HEIGHT 22
 #define SELECT_ROW_LINE_WIDTH 1
+#define ARROW_OFFSET_X 2
 #define TEXT_OFFSET_Y 6
 #define TEXT_OFFSET_X 15
 #define TEXT_OFFSET_HELP_X 5
@@ -167,25 +168,35 @@ static void menu_draw_base_image(void)
 	Paint_DrawLine(0, y, EPD_1IN54_V2_WIDTH, y,
 		       BLACK, HEADER_LINE_WIDTH, LINE_STYLE_SOLID);
 
-	y += HEADER_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	y += HEADER_LINE_WIDTH;
+	Paint_DrawjChar(ARROW_OFFSET_X, y + TEXT_OFFSET_Y, 0xA1, &font12,
+			BLACK, WHITE); /* "▲" */
+	y +=  SELECT_ROW_HEIGHT;
 	Paint_DrawLine(0, y, EPD_1IN54_V2_WIDTH, y,
 		       BLACK, SELECT_ROW_LINE_WIDTH, LINE_STYLE_SOLID);
+
 	y += SELECT_ROW_LINE_WIDTH;
 	Paint_DrawRectangle(0, y, EPD_1IN54_V2_WIDTH, y + SELECT_ROW_HEIGHT,
 			    BLACK, 1, DRAW_FILL_FULL);
+	Paint_DrawjChar(ARROW_OFFSET_X, y + TEXT_OFFSET_Y, 0xA2, &font12,
+			WHITE, BLACK); /* "▶" */
+
 	y += SELECT_ROW_HEIGHT;
 	Paint_DrawLine(0, y, EPD_1IN54_V2_WIDTH, y,
 		       BLACK, SELECT_ROW_LINE_WIDTH, LINE_STYLE_SOLID);
-	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
+	y += SELECT_ROW_LINE_WIDTH;
+	Paint_DrawjChar(ARROW_OFFSET_X, y + TEXT_OFFSET_Y, 0xA3, &font12,
+			BLACK, WHITE); /* "▼" */
+	y += SELECT_ROW_HEIGHT;
 	Paint_DrawLine(0, y, EPD_1IN54_V2_WIDTH, y,
 		       BLACK, SELECT_ROW_LINE_WIDTH, LINE_STYLE_SOLID);
 
 	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12,
-			   "PREVIOUS: Double press", &font12, 0, BLACK, WHITE);
+			   "\xC2\xA1PREVIOUS: Double press", &font12, 0, BLACK, WHITE);
 	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*2,
-			   "NEXT: Short press", &font12, 0, BLACK, WHITE);
+			   "\xC2\xA3NEXT: Short press", &font12, 0, BLACK, WHITE);
 	Paint_DrawString_j(0, EPD_1IN54_V2_HEIGHT - 12*3,
-			   "SELECT: Long press", &font12, 0, BLACK, WHITE);
+			   "\xC2\xA2SELECT: Long press", &font12, 0, BLACK, WHITE);
 }
 
 

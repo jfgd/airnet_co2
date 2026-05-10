@@ -407,7 +407,7 @@ int main(void)
   Paint_SelectImage(gImage);
   Paint_Clear(WHITE);
   draw_logo(gImage);
-  Paint_DrawString_j((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*font12.max_width)/2,
+  Paint_DrawString_j((EPD_1IN54_V2_WIDTH-(sizeof(VERSION)-1)*font12.glyphs[0].width)/2,
 		     130, VERSION, &font12, 0, BLACK, WHITE);
 
   /* Start screen */
