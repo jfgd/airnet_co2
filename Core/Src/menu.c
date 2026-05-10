@@ -273,7 +273,7 @@ static void wheel_draw_text_row(int row, char *str)
 	}
 
 	if (str == NULL) {
-		str = "Back <-";
+		str = "Back \xC2\xA5";
 	}
 
 	Paint_DrawString_j(TEXT_OFFSET_X, y + TEXT_OFFSET_Y, str,
