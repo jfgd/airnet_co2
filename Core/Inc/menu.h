@@ -27,17 +27,23 @@
 #define __MENU_H
 
 
-enum temperature_unit {
+enum conf_temperature_unit {
 	CONF_TEMP_CELSIUS = 0,
 	CONF_TEMP_FAHRENHEIT = 1,
+};
+
+enum conf_skin_value {
+	CONF_SKIN_SLIDER = 0,
+	CONF_SKIN_SLIDER_INVERTED,
 };
 
 /* Only int allowed */
 struct conf {
 	int refresh_rate_sec;
-	enum temperature_unit temperature_unit;
+	enum conf_skin_value skin;
 	int debug_counter;
 	int debug_bat_voltage;
+	enum conf_temperature_unit temperature_unit;
 };
 
 /* Global configuration */

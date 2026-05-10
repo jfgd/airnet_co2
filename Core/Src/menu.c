@@ -43,11 +43,13 @@ static int mod(int a, int b)
     return r < 0 ? r + b : r;
 }
 
+/* Default values */
 struct conf g_conf = {
 	.refresh_rate_sec = 5,
-	.temperature_unit = CONF_TEMP_CELSIUS,
+	.skin = CONF_SKIN_SLIDER,
 	.debug_counter = 0,
 	.debug_bat_voltage = 0,
+	.temperature_unit = CONF_TEMP_CELSIUS,
 };
 
 
@@ -89,6 +91,18 @@ struct menu_list g_menu[] = {
 		},
 	},
 	{
+		.name = "Skin",
+		.help = "Select display",
+		.type = SELECT,
+		.value = (int*)&g_conf.skin,
+		.items = {
+			{ .value = CONF_SKIN_SLIDER,
+			  .name = "Slider" },
+			{ .value = CONF_SKIN_SLIDER_INVERTED,
+			  .name = "Slider Inverted Color" },
+		},
+	},
+	{
 		.name = "Debug Counter",
 		.help = "Display a counter increasing at each refresh",
 		.type = SELECT,
@@ -108,16 +122,16 @@ struct menu_list g_menu[] = {
 			{ .value = 1, .name = "Yes" },
 		},
 	},
-	{
-		.name = "Temperature Unit",
-		.help = "Select °C or °F",
-		.type = SELECT,
-		.value = (int*)&g_conf.temperature_unit,
-		.items = {
-			{ .value = CONF_TEMP_CELSIUS, .name = "°C" },
-			{ .value = CONF_TEMP_FAHRENHEIT, .name = "°F" },
-		},
-	},
+	/* { */
+	/* 	.name = "Temperature Unit", */
+	/* 	.help = "Select °C or °F", */
+	/* 	.type = SELECT, */
+	/* 	.value = (int*)&g_conf.temperature_unit, */
+	/* 	.items = { */
+	/* 		{ .value = CONF_TEMP_CELSIUS, .name = "°C" }, */
+	/* 		{ .value = CONF_TEMP_FAHRENHEIT, .name = "°F" }, */
+	/* 	}, */
+	/* }, */
 	{
 		.name = "Exit",
 		.help = "Exit configuration menu",
