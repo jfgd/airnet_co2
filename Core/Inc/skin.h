@@ -27,10 +27,11 @@
 #define __SKIN_H
 
 #include <stdbool.h>
+#include "menu.h"		/* For enum conf_skin_value */
 
-void skin_prepare(uint8_t *gImage);
+void skin_prepare(enum conf_skin_value skin, uint8_t *gImage);
 
-void skin_update(uint8_t *gImage, uint16_t co2_ppm,
+void skin_update(enum conf_skin_value skin, uint8_t *gImage, uint16_t co2_ppm,
 		 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
 		 bool powered, int debug_counter, int debug_bat_voltage);
 

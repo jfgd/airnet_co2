@@ -338,7 +338,7 @@ static void read_data_and_draw(int display)
   /* nPGOOD from battery charger, low when USB plugged */
   int powered = HAL_GPIO_ReadPin(nPGOOD_GPIO_Port, nPGOOD_Pin) ? 0 : 1;;
 
-  TS(skin_update(gImage, co2_ppm, temperature, humidity, vbat_mv, powered, g_conf.debug_counter, g_conf.debug_bat_voltage)); /* 260 ms ! */
+  TS(skin_update(g_conf.skin, gImage, co2_ppm, temperature, humidity, vbat_mv, powered, g_conf.debug_counter, g_conf.debug_bat_voltage)); /* 260 ms ! */
 
   printf("Loop duration : %ld ms\n", rtc_get_ms() - ts_ms_start);
 
@@ -442,7 +442,7 @@ int main(void)
   }
 
   /* Prepare data display */
-  TS(skin_prepare(gImage));     /* 12 ms */
+  TS(skin_prepare(g_conf.skin, gImage));     /* 12 ms */
 
   /* Do a first read and display */
   ts_ms_loop = rtc_get_ms();
@@ -470,7 +470,7 @@ int main(void)
     if (BUTTON_GPIO_STATE() == 0
         && (rtc_get_ms() - g_ts_ms_last_button_pressed) > 900) {
       menu_enter();
-      skin_prepare(gImage);
+      skin_prepare(g_conf.skin, gImage);
       /* continue; */
     }
 

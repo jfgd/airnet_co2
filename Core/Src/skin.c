@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include "EPD_1in54_V2.h"
 #include "GUI_Paint.h"
+#include "skin.h"
 
 #define STR_DISP_LEN 16
 
@@ -106,38 +107,126 @@ static void draw_slider_cursor(uint8_t *image, int xstart, int ystart,
 
 }
 
-void skin_prepare(uint8_t *image)
+static void skin_slider_prepare(uint8_t *image, int fcolor, int bcolor)
 {
-  UNUSED(image);
-  Paint_Clear(WHITE);
+  Paint_Clear(bcolor);
 
-  Paint_DrawjChar(0, YSTART_TEMP, 'T', &Thermometer39, BLACK, WHITE);
+  Paint_DrawjChar(0, YSTART_TEMP, 'T', &Thermometer39, fcolor, bcolor);
   Paint_DrawjChar(XSTART_HUMI+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20, 'D',
-                  &Droplet20, BLACK, WHITE);
+                  &Droplet20, fcolor, bcolor);
 
   Paint_DrawString_j(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+2, "°C",
-                     &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+                     &Digits25NotoSansSemiCondensedBold, 0, fcolor, bcolor);
   Paint_DrawString_j(XSTART_HUMI+(2*WITH_TEMP_HUMI_FONT), YSTART_HUMI+2, "%",
-                     &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+                     &Digits25NotoSansSemiCondensedBold, 0, fcolor, bcolor);
 
   Paint_DrawString_j(70, YSTART_CO2_PPM+78, "CO² ppm",
-                     &CO2ppm25NotoSansMedium, 0, BLACK, WHITE);
+                     &CO2ppm25NotoSansMedium, 0, fcolor, bcolor);
 
-  draw_slider_border(image, 0, 180, 200, 18, BLACK, WHITE);
+  draw_slider_border(image, 0, 180, 200, 18, fcolor, bcolor);
 }
 
-void skin_update(uint8_t *image, uint16_t co2_ppm,
-                 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
-                 bool powered, int debug_counter, int debug_bat_voltage)
+static void skin_slider_update(
+  uint8_t *image, int fcolor, int bcolor,
+  uint16_t co2_ppm, uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
+  bool powered, uint32_t counter, int debug_counter, int debug_bat_voltage)
 {
-  UNUSED(image);
-  static uint32_t counter = 0;
   char co2_ppm_str[STR_DISP_LEN] = {0};
   char temperature_str1[STR_DISP_LEN] = {0};
   char temperature_str2[STR_DISP_LEN] = {0};
   char humidity_str[STR_DISP_LEN] = {0};
   char vbat_mv_str[STR_DISP_LEN] = {0};
   char counter_str[STR_DISP_LEN] = {0};
+
+  /* Temperature */
+  snprintf(temperature_str1, STR_DISP_LEN, "%ld", temperature / 100);
+  snprintf(temperature_str2, STR_DISP_LEN, ".%ld", (temperature - ((temperature / 100)*100))/10);
+  Paint_ClearWindows(XSTART_TEMP, YSTART_TEMP,
+                     XSTART_TEMP + WITH_TEMP_HUMI_FONT * 2,
+                     YSTART_TEMP + Digits39NotoSansSemiCondensedBold.height, bcolor);
+  Paint_ClearWindows(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20,
+                     XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT) + 11 + 6,
+                     YSTART_TEMP+20 + Digits25NotoSansSemiCondensedBold.height, bcolor);
+  Paint_DrawString_j(XSTART_TEMP, YSTART_TEMP, temperature_str1,
+                     &Digits39NotoSansSemiCondensedBold, 0, fcolor, bcolor);
+  Paint_DrawString_j(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20, temperature_str2,
+                     &Digits25NotoSansSemiCondensedBold, 0, fcolor, bcolor);
+
+  /* Humidity */
+  snprintf(humidity_str, STR_DISP_LEN, "%ld", humidity);
+  Paint_ClearWindows(XSTART_HUMI, YSTART_HUMI,
+                     XSTART_HUMI + WITH_TEMP_HUMI_FONT * 2,
+                     YSTART_HUMI + Digits39NotoSansSemiCondensedBold.height, bcolor);
+  Paint_DrawString_j(XSTART_HUMI, YSTART_HUMI, humidity_str,
+                     &Digits39NotoSansSemiCondensedBold, 0, fcolor, bcolor);
+
+  /* CO2 */
+  snprintf(co2_ppm_str, STR_DISP_LEN, "%02d", co2_ppm);
+  Paint_ClearWindows(XSTART_CO2_PPM, YSTART_CO2_PPM,
+                     XSTART_CO2_PPM + Digits65NotoSansSemiCondensedBold.max_width * 4,
+                     YSTART_CO2_PPM + Digits65NotoSansSemiCondensedBold.height, bcolor);
+  int xstart = XSTART_CO2_PPM;
+  if (co2_ppm < 1000) {
+    xstart = 31;                /* Center */
+  }
+  Paint_DrawString_j(xstart, YSTART_CO2_PPM, co2_ppm_str,
+                     &Digits65NotoSansSemiCondensedBold, 0, fcolor, bcolor);
+#define MAX_SLIDER_PPM 2500
+#define MIN_SLIDER_PPM 400
+  static int perthousand_prev = 0;
+  int perthousand = (1000 * (int)co2_ppm) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM) - ((1000 * MIN_SLIDER_PPM) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM));
+  draw_slider_cursor(image, 0, 180, 200, 18, bcolor, fcolor, perthousand_prev);
+  draw_slider_cursor(image, 0, 180, 200, 18, fcolor, bcolor, perthousand);
+  perthousand_prev = perthousand;
+
+  /* Power */
+  if (powered) {
+    Paint_DrawjChar(5, 130, 'L', &Lightning27, fcolor, bcolor);
+  } else {
+    Paint_ClearWindows(5, 130, 5+Lightning27.max_width, 130+Lightning27.height, bcolor);
+  }
+
+  /* Debug */
+  printf("counter %ld\n", counter);
+  Paint_ClearWindows(1, 166, 1+font12.max_width*12, 166+font12.height, bcolor);
+  if (debug_counter) {
+    snprintf(counter_str, STR_DISP_LEN, "%ld", counter);
+    Paint_DrawString_j(1, 166, counter_str,
+                       &font12, 0, fcolor, bcolor);
+  }
+
+  Paint_ClearWindows(150, 166, 150+font12.max_width*7, 166+font12.height, bcolor);
+  if (debug_bat_voltage) {
+    snprintf(vbat_mv_str, STR_DISP_LEN, "%ld mV", vbat_mv);
+    Paint_DrawString_j(150, 166, vbat_mv_str,
+                       &font12, 0, fcolor, bcolor);
+  }
+
+}
+
+void skin_prepare(enum conf_skin_value skin, uint8_t *image)
+{
+  switch (skin) {
+
+  case CONF_SKIN_SLIDER:
+  default:
+    skin_slider_prepare(image, BLACK, WHITE);
+    break;
+
+  case CONF_SKIN_SLIDER_INVERTED:
+    skin_slider_prepare(image, WHITE, BLACK);
+    break;
+  }
+}
+
+void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
+                 uint32_t temperature, uint32_t humidity, uint32_t vbat_mv,
+                 bool powered, int debug_counter, int debug_bat_voltage)
+{
+  UNUSED(image);
+  UNUSED(skin);
+  static uint32_t counter = 0;
+
 
   if (co2_ppm > 10000) {
     co2_ppm = 9999;
@@ -151,67 +240,20 @@ void skin_update(uint8_t *image, uint16_t co2_ppm,
 
   counter++;
 
-  /* Temperature */
-  snprintf(temperature_str1, STR_DISP_LEN, "%ld", temperature / 100);
-  snprintf(temperature_str2, STR_DISP_LEN, ".%ld", (temperature - ((temperature / 100)*100))/10);
-  Paint_ClearWindows(XSTART_TEMP, YSTART_TEMP,
-                     XSTART_TEMP + WITH_TEMP_HUMI_FONT * 2,
-                     YSTART_TEMP + Digits39NotoSansSemiCondensedBold.height, WHITE);
-  Paint_ClearWindows(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20,
-                     XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT) + 11 + 6,
-                     YSTART_TEMP+20 + Digits25NotoSansSemiCondensedBold.height, WHITE);
-  Paint_DrawString_j(XSTART_TEMP, YSTART_TEMP, temperature_str1,
-                     &Digits39NotoSansSemiCondensedBold, 0, BLACK, WHITE);
-  Paint_DrawString_j(XSTART_TEMP+(2*WITH_TEMP_HUMI_FONT), YSTART_TEMP+20, temperature_str2,
-                     &Digits25NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+  switch (skin) {
 
-  /* Humidity */
-  snprintf(humidity_str, STR_DISP_LEN, "%ld", humidity);
-  Paint_ClearWindows(XSTART_HUMI, YSTART_HUMI,
-                     XSTART_HUMI + WITH_TEMP_HUMI_FONT * 2,
-                     YSTART_HUMI + Digits39NotoSansSemiCondensedBold.height, WHITE);
-  Paint_DrawString_j(XSTART_HUMI, YSTART_HUMI, humidity_str,
-                     &Digits39NotoSansSemiCondensedBold, 0, BLACK, WHITE);
+  case CONF_SKIN_SLIDER:
+  default:
+    skin_slider_update(image, BLACK, WHITE, co2_ppm, temperature,
+                       humidity, vbat_mv, powered, counter,
+                       debug_counter, debug_bat_voltage);
+    break;
 
-  /* CO2 */
-  snprintf(co2_ppm_str, STR_DISP_LEN, "%02d", co2_ppm);
-  Paint_ClearWindows(XSTART_CO2_PPM, YSTART_CO2_PPM,
-                     XSTART_CO2_PPM + Digits65NotoSansSemiCondensedBold.max_width * 4,
-                     YSTART_CO2_PPM + Digits65NotoSansSemiCondensedBold.height, WHITE);
-  int xstart = XSTART_CO2_PPM;
-  if (co2_ppm < 1000) {
-    xstart = 31;                /* Center */
-  }
-  Paint_DrawString_j(xstart, YSTART_CO2_PPM, co2_ppm_str,
-                     &Digits65NotoSansSemiCondensedBold, 0, BLACK, WHITE);
-#define MAX_SLIDER_PPM 2500
-#define MIN_SLIDER_PPM 400
-  static int perthousand_prev = 0;
-  int perthousand = (1000 * (int)co2_ppm) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM) - ((1000 * MIN_SLIDER_PPM) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM));
-  draw_slider_cursor(image, 0, 180, 200, 18, WHITE, BLACK, perthousand_prev);
-  draw_slider_cursor(image, 0, 180, 200, 18, BLACK, WHITE, perthousand);
-  perthousand_prev = perthousand;
-
-  /* Power */
-  if (powered) {
-    Paint_DrawjChar(5, 130, 'L', &Lightning27, BLACK, WHITE);
-  } else {
-    Paint_ClearWindows(5, 130, 5+Lightning27.max_width, 130+Lightning27.height, WHITE);
+  case CONF_SKIN_SLIDER_INVERTED:
+    skin_slider_update(image, WHITE, BLACK, co2_ppm, temperature,
+                       humidity, vbat_mv, powered, counter,
+                       debug_counter, debug_bat_voltage);
+    break;
   }
 
-  /* Debug */
-  printf("counter %ld\n", counter);
-  Paint_ClearWindows(1, 166, 1+font12.max_width*12, 166+font12.height, WHITE);
-  if (debug_counter) {
-    snprintf(counter_str, STR_DISP_LEN, "%ld", counter);
-    Paint_DrawString_j(1, 166, counter_str,
-                       &font12, 0, BLACK, WHITE);
-  }
-
-  Paint_ClearWindows(150, 166, 150+font12.max_width*7, 166+font12.height, WHITE);
-  if (debug_bat_voltage) {
-    snprintf(vbat_mv_str, STR_DISP_LEN, "%ld mV", vbat_mv);
-    Paint_DrawString_j(150, 166, vbat_mv_str,
-                       &font12, 0, BLACK, WHITE);
-  }
 }
