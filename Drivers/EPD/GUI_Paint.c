@@ -78,6 +78,9 @@
 #include <string.h> //memset()
 #include <math.h>
 
+#define Debug(__info,...)
+//#define Debug(__info,...) printf("Debug: " __info,##__VA_ARGS__)
+
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
 

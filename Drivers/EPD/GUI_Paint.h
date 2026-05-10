@@ -73,8 +73,6 @@
 #define UWORD   uint16_t
 #define UDOUBLE uint32_t
 
-#define Debug(__info,...)
-
 /**
  * Image attributes
 **/

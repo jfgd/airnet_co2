@@ -34,9 +34,6 @@
 #include <stdio.h>
 #include "main.h"
 
-#define Debug(__info,...)
-//#define Debug(__info,...) printf("Debug: " __info,##__VA_ARGS__)
-
 #define UBYTE   uint8_t
 #define UWORD   uint16_t
 #define UDOUBLE uint32_t
