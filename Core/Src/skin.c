@@ -42,7 +42,7 @@
 #define SLIDER_Y (EPD_1IN54_V2_HEIGHT - SLIDER_HEIGHT)
 
 #define SLIDER_EMOJI_HEIGHT 14
-#define SLIDER_EMOJI_Y (EPD_1IN54_V2_HEIGHT - SLIDER_HEIGHT)
+#define SLIDER_EMOJI_Y (EPD_1IN54_V2_HEIGHT - SLIDER_EMOJI_HEIGHT)
 
 
 
@@ -294,11 +294,13 @@ void skin_prepare(enum conf_skin_value skin, uint8_t *image)
   switch (skin) {
   case CONF_SKIN_SLIDER_INVERTED:
   case CONF_SKIN_EMOJI_INVERTED:
+  case CONF_SKIN_SLIDER_EMOJI_INVERTED:
     bcolor = BLACK;
     fcolor = WHITE;
     break;
   case CONF_SKIN_SLIDER:
   case CONF_SKIN_EMOJI:
+  case CONF_SKIN_SLIDER_EMOJI:
   default:
     bcolor = WHITE;
     fcolor = BLACK;

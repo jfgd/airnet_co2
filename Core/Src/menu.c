@@ -109,7 +109,7 @@ struct menu_list g_menu[] = {
 			{ .value = CONF_SKIN_EMOJI_INVERTED,
 			  .name = "Emoji (Inverted Color)" },
 			{ .value = CONF_SKIN_SLIDER_EMOJI_INVERTED,
-			  .name = "Slider + Emoji (Inv. Color)" },
+			  .name = "Slider + Emoji Inv. Col" },
 		},
 	},
 	{
