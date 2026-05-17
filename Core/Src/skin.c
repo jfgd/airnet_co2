@@ -38,6 +38,14 @@
 #define XSTART_CO2_PPM 8
 #define YSTART_CO2_PPM 62
 
+#define SLIDER_HEIGHT 18
+#define SLIDER_Y (EPD_1IN54_V2_HEIGHT - SLIDER_HEIGHT)
+
+#define SLIDER_EMOJI_HEIGHT 14
+#define SLIDER_EMOJI_Y (EPD_1IN54_V2_HEIGHT - SLIDER_HEIGHT)
+
+
+
 #define WIDTH_TEMP_HUMI_FONT 27
 /* = jfont_get_width(&Digits39NotoSansSemiCondensedBold, '8') */
 
@@ -130,11 +138,12 @@ static void skin_co2_horizontal_prepare(uint8_t *image, int fcolor,
 
 }
 
-static void skin_slider_prepare(uint8_t *image, int fcolor, int bcolor)
+static void skin_slider_prepare(uint8_t *image, int fcolor, int bcolor,
+				int y, int height)
 {
   UNUSED(image);
 
-  draw_slider_border(image, 0, 180, 200, 18, fcolor, bcolor);
+  draw_slider_border(image, 0, y, EPD_1IN54_V2_WIDTH, height, fcolor, bcolor);
 }
 
 static void skin_co2_2lines_prepare(uint8_t *image, int fcolor, int bcolor,
@@ -224,14 +233,15 @@ static void skin_emoji_update(
   Paint_DrawjChar(x, y, emoji_levels[l], &EmojiFaces, fcolor, bcolor);
 }
 
-static void skin_power_update(uint8_t *image, int fcolor, int bcolor, bool powered)
+static void skin_power_update(uint8_t *image, int fcolor, int bcolor, bool powered,
+			      int x, int y)
 {
   UNUSED(image);
   /* Power */
   if (powered) {
-    Paint_DrawjChar(5, 130, 'L', &Lightning27, fcolor, bcolor);
+    Paint_DrawjChar(x, y, 'L', &Lightning27, fcolor, bcolor);
   } else {
-    Paint_ClearWindows(5, 130, 5+Lightning27.max_width, 130+Lightning27.height, bcolor);
+    Paint_ClearWindows(x, y, 5+Lightning27.max_width, 130+Lightning27.height, bcolor);
   }
 }
 
@@ -264,14 +274,16 @@ static void skin_debug_update(
 }
 
 static void skin_slider_update(uint8_t *image, int fcolor, int bcolor,
-                               uint16_t co2_ppm)
+                               uint16_t co2_ppm, int y, int height)
 {
 #define MAX_SLIDER_PPM 2500
 #define MIN_SLIDER_PPM 400
   static int perthousand_prev = 0;
   int perthousand = (1000 * (int)co2_ppm) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM) - ((1000 * MIN_SLIDER_PPM) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM));
-  draw_slider_cursor(image, 0, 180, 200, 18, bcolor, fcolor, perthousand_prev);
-  draw_slider_cursor(image, 0, 180, 200, 18, fcolor, bcolor, perthousand);
+  draw_slider_cursor(image, 0, y, EPD_1IN54_V2_WIDTH, height,
+		     bcolor, fcolor, perthousand_prev);
+  draw_slider_cursor(image, 0, y, EPD_1IN54_V2_WIDTH, height,
+		     fcolor, bcolor, perthousand);
   perthousand_prev = perthousand;
 }
 
@@ -302,7 +314,7 @@ void skin_prepare(enum conf_skin_value skin, uint8_t *image)
   default:
     skin_temp_rh_top_prepare(image, fcolor, bcolor);
     skin_co2_horizontal_prepare(image, fcolor, bcolor, 70, YSTART_CO2_PPM+78);
-    skin_slider_prepare(image, fcolor, bcolor);
+    skin_slider_prepare(image, fcolor, bcolor, SLIDER_Y, SLIDER_HEIGHT);
     break;
 
   case CONF_SKIN_EMOJI:
@@ -315,7 +327,7 @@ void skin_prepare(enum conf_skin_value skin, uint8_t *image)
   case CONF_SKIN_SLIDER_EMOJI:
   case CONF_SKIN_SLIDER_EMOJI_INVERTED:
     skin_temp_rh_top_prepare(image, fcolor, bcolor);
-    skin_slider_prepare(image, fcolor, bcolor);
+    skin_slider_prepare(image, fcolor, bcolor, SLIDER_EMOJI_Y, SLIDER_EMOJI_HEIGHT);
     skin_co2_2lines_prepare(image, fcolor, bcolor,
                             120, YSTART_CO2_PPM+63, 120, YSTART_CO2_PPM+88);
     break;
@@ -347,11 +359,13 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
   switch (skin) {
   case CONF_SKIN_SLIDER_INVERTED:
   case CONF_SKIN_EMOJI_INVERTED:
+  case CONF_SKIN_SLIDER_EMOJI_INVERTED:
     bcolor = BLACK;
     fcolor = WHITE;
     break;
   case CONF_SKIN_SLIDER:
   case CONF_SKIN_EMOJI:
+  case CONF_SKIN_SLIDER_EMOJI:
   default:
     bcolor = WHITE;
     fcolor = BLACK;
@@ -366,8 +380,8 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
   default:
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM);
-    skin_power_update(image, fcolor, bcolor, powered);
-    skin_slider_update(image, fcolor, bcolor, co2_ppm);
+    skin_power_update(image, fcolor, bcolor, powered, 5, 130);
+    skin_slider_update(image, fcolor, bcolor, co2_ppm, SLIDER_Y, SLIDER_HEIGHT);
     skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
                       debug_counter, debug_bat_voltage, 1, 166, 150, 166);
     break;
@@ -376,8 +390,8 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
   case CONF_SKIN_EMOJI_INVERTED:
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM);
-    skin_power_update(image, fcolor, bcolor, powered);
     skin_emoji_update(image, fcolor, bcolor, co2_ppm, 15, 139);
+    skin_power_update(image, fcolor, bcolor, powered, 87, 130);
     skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
                       debug_counter, debug_bat_voltage, 75, 188, 150, 188);
     break;
@@ -386,9 +400,12 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
   case CONF_SKIN_SLIDER_EMOJI_INVERTED:
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM-13);
-    skin_power_update(image, fcolor, bcolor, powered);
     skin_emoji_update(image, fcolor, bcolor, co2_ppm, 15, 119);
-    skin_slider_update(image, fcolor, bcolor, co2_ppm);
+    skin_power_update(image, fcolor, bcolor, powered, 87, 130);
+    skin_slider_update(image, fcolor, bcolor, co2_ppm,
+		       SLIDER_EMOJI_Y, SLIDER_EMOJI_HEIGHT);
+    skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
+                      debug_counter, debug_bat_voltage, 160, 168, 67, 168);
     break;
   }
 
