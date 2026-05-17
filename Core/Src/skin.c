@@ -241,7 +241,7 @@ static void skin_power_update(uint8_t *image, int fcolor, int bcolor, bool power
   if (powered) {
     Paint_DrawjChar(x, y, 'L', &Lightning27, fcolor, bcolor);
   } else {
-    Paint_ClearWindows(x, y, 5+Lightning27.max_width, 130+Lightning27.height, bcolor);
+    Paint_ClearWindows(x, y, x+Lightning27.max_width, y+Lightning27.height, bcolor);
   }
 }
 
@@ -391,7 +391,7 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM);
     skin_emoji_update(image, fcolor, bcolor, co2_ppm, 15, 139);
-    skin_power_update(image, fcolor, bcolor, powered, 87, 130);
+    skin_power_update(image, fcolor, bcolor, powered, 87, 145);
     skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
                       debug_counter, debug_bat_voltage, 75, 188, 150, 188);
     break;
