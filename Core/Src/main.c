@@ -56,13 +56,13 @@ ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
 
+UART_HandleTypeDef hlpuart2;
+
 RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim3;
-
-UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
@@ -83,7 +83,7 @@ static void MX_I2C1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_USART1_UART_Init(void);
+static void MX_LPUART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -94,7 +94,7 @@ static void MX_USART1_UART_Init(void);
 #ifdef DEBUG_PRINT
 int __io_putchar(int ch)
 {
-  HAL_UART_Transmit(&huart1, (uint8_t *) &ch, 1, 1000);
+  HAL_UART_Transmit(&hlpuart2, (uint8_t *) &ch, 1, 1000);
   return ch;
 }
 #endif  /* DEBUG_PRINT */
@@ -386,7 +386,7 @@ int main(void)
   MX_RTC_Init();
   MX_SPI1_Init();
   MX_TIM3_Init();
-  MX_USART1_UART_Init();
+  MX_LPUART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
@@ -666,6 +666,53 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief LPUART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_LPUART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN LPUART2_Init 0 */
+
+  /* USER CODE END LPUART2_Init 0 */
+
+  /* USER CODE BEGIN LPUART2_Init 1 */
+
+  /* USER CODE END LPUART2_Init 1 */
+  hlpuart2.Instance = LPUART2;
+  hlpuart2.Init.BaudRate = 115200;
+  hlpuart2.Init.WordLength = UART_WORDLENGTH_8B;
+  hlpuart2.Init.StopBits = UART_STOPBITS_1;
+  hlpuart2.Init.Parity = UART_PARITY_NONE;
+  hlpuart2.Init.Mode = UART_MODE_TX_RX;
+  hlpuart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  hlpuart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  hlpuart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  hlpuart2.FifoMode = UART_FIFOMODE_DISABLE;
+  if (HAL_UART_Init(&hlpuart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&hlpuart2, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&hlpuart2, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&hlpuart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN LPUART2_Init 2 */
+
+  /* USER CODE END LPUART2_Init 2 */
+
+}
+
+/**
   * @brief RTC Initialization Function
   * @param None
   * @retval None
@@ -828,58 +875,6 @@ static void MX_TIM3_Init(void)
 }
 
 /**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-#ifndef DEBUG_PRINT
-    return;
-#endif  /* not DEBUG_PRINT */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -912,6 +907,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PA0 PA11 PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_11|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : EPD_ENABLE_Pin EPD_CS_Pin EPD_DC_Pin EPD_RST_Pin */
   GPIO_InitStruct.Pin = EPD_ENABLE_Pin|EPD_CS_Pin|EPD_DC_Pin|EPD_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -934,12 +935,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA11 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BUTTON_Pin */
   GPIO_InitStruct.Pin = BUTTON_Pin;
