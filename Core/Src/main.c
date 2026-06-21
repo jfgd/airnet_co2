@@ -275,7 +275,7 @@ static void read_data_and_draw(int display)
 
   HAL_ADC_PollForConversion(&hadc1, 10000);
   adc_val = HAL_ADC_GetValue(&hadc1);
-  vbat_mv = (adc_val * 3300) / 4095;
+  vbat_mv = (adc_val * 3 * 3300) / 4095;
   printf("adc %ld %ld mV %ld ms\n", adc_val, vbat_mv,rtc_get_ms());
   HAL_ADC_Stop(&hadc1);
 
@@ -594,7 +594,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Channel = ADC_CHANNEL_VBAT;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
