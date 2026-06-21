@@ -73,9 +73,23 @@ struct menu_list {
 	char *help;
 	enum value_type type;
 	int *value;
+	int (*callback)(int, int);
 	struct item items[MAX_LIST_SIZE+1];
 };
 
+
+int menu_callback_set_refresh_rate(int old_refresh_rate, int new_refresh_rate)
+{
+	if (old_refresh_rate == new_refresh_rate)
+	{
+		return 0;
+	}
+
+	printf("Refresh rate callback %d -> %d\n", old_refresh_rate, new_refresh_rate);
+	set_refresh_rate(new_refresh_rate);
+
+	return 0;
+}
 
 struct menu_list g_menu[] = {
 	{
@@ -83,6 +97,7 @@ struct menu_list g_menu[] = {
 		.help = "Select refresh rate",
 		.type = SELECT,
 		.value = &g_conf.refresh_rate_sec,
+		.callback = menu_callback_set_refresh_rate,
 		.items = {
 			{ .value = 5, .name = "5 s" },
 			{ .value = 10, .name = "10 s" },
@@ -97,6 +112,7 @@ struct menu_list g_menu[] = {
 		.help = "Select display",
 		.type = SELECT,
 		.value = (int*)&g_conf.skin,
+		.callback = NULL,
 		.items = {
 			{ .value = CONF_SKIN_SLIDER,
 			  .name = "Slider" },
@@ -117,6 +133,7 @@ struct menu_list g_menu[] = {
 		.help = "Display a counter increasing at each refresh",
 		.type = SELECT,
 		.value = &g_conf.debug_counter,
+		.callback = NULL,
 		.items = {
 			{ .value = 0, .name = "No" },
 			{ .value = 1, .name = "Yes" },
@@ -127,6 +144,7 @@ struct menu_list g_menu[] = {
 		.help = "Display battery voltage in mV",
 		.type = SELECT,
 		.value = &g_conf.debug_bat_voltage,
+		.callback = NULL,
 		.items = {
 			{ .value = 0, .name = "No" },
 			{ .value = 1, .name = "Yes" },
@@ -396,8 +414,19 @@ static enum menu_handle_ret menu_handle_button_pressed(
 				*item_idx = UNSELECTED;
 				return NEED_REFRESH;
 			}
-			printf("value selected: %d written on %p\n", g_menu[*menu_idx].items[*item_idx].value, g_menu[*menu_idx].value);
-			*(g_menu[*menu_idx].value) = g_menu[*menu_idx].items[*item_idx].value;
+			printf("Assign value selected: %d written on %p\n",
+			       g_menu[*menu_idx].items[*item_idx].value,
+			       g_menu[*menu_idx].value);
+			/* Call callback if any */
+			if (g_menu[*menu_idx].callback) {
+				printf("Calling callback\n");
+				g_menu[*menu_idx].callback(
+					*g_menu[*menu_idx].value,
+					g_menu[*menu_idx].items[*item_idx].value);
+			}
+			/* Assign value */
+			*(g_menu[*menu_idx].value)
+				= g_menu[*menu_idx].items[*item_idx].value;
 			*item_idx = UNSELECTED;
 			return NEED_REFRESH;
 		}
