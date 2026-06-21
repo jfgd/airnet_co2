@@ -43,10 +43,10 @@ enum conf_skin_value {
 
 /* Only int allowed */
 struct conf {
-	int refresh_rate_sec;
+	int32_t refresh_rate_sec;
 	enum conf_skin_value skin;
-	int debug_counter;
-	int debug_bat_voltage;
+	int32_t debug_counter;
+	int32_t debug_bat_voltage;
 	enum conf_temperature_unit temperature_unit;
 };
 

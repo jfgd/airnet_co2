@@ -64,7 +64,7 @@ enum value_type {
 #define MAX_ITEM_NAME_LEN 32
 
 struct item {
-	int value;
+	int32_t value;
 	char *name;
 };
 
@@ -72,20 +72,21 @@ struct menu_list {
 	char *name;
 	char *help;
 	enum value_type type;
-	int *value;
-	int (*callback)(int, int);
+	int32_t *value;
+	int (*callback)(int32_t, int32_t);
 	struct item items[MAX_LIST_SIZE+1];
 };
 
 
-int menu_callback_set_refresh_rate(int old_refresh_rate, int new_refresh_rate)
+int menu_callback_set_refresh_rate(int32_t old_refresh_rate, int32_t new_refresh_rate)
 {
 	if (old_refresh_rate == new_refresh_rate)
 	{
 		return 0;
 	}
 
-	printf("Refresh rate callback %d -> %d\n", old_refresh_rate, new_refresh_rate);
+	printf("Refresh rate callback %ld -> %ld\n",
+	       old_refresh_rate, new_refresh_rate);
 	set_refresh_rate(new_refresh_rate);
 
 	return 0;
@@ -111,7 +112,7 @@ struct menu_list g_menu[] = {
 		.name = "Skin",
 		.help = "Select display",
 		.type = SELECT,
-		.value = (int*)&g_conf.skin,
+		.value = (int32_t*)&g_conf.skin,
 		.callback = NULL,
 		.items = {
 			{ .value = CONF_SKIN_SLIDER,
@@ -414,7 +415,7 @@ static enum menu_handle_ret menu_handle_button_pressed(
 				*item_idx = UNSELECTED;
 				return NEED_REFRESH;
 			}
-			printf("Assign value selected: %d written on %p\n",
+			printf("Assign value selected: %ld written on %p\n",
 			       g_menu[*menu_idx].items[*item_idx].value,
 			       g_menu[*menu_idx].value);
 			/* Call callback if any */
