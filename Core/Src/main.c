@@ -56,6 +56,8 @@ ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
 
+LPTIM_HandleTypeDef hlptim1;
+
 UART_HandleTypeDef hlpuart2;
 
 RTC_HandleTypeDef hrtc;
@@ -84,6 +86,7 @@ static void MX_RTC_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_LPUART2_UART_Init(void);
+static void MX_LPTIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -101,12 +104,12 @@ int __io_putchar(int ch)
 
 static inline void led_red_on(void)
 {
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_4);
 }
 
 static inline void led_red_off(void)
 {
-  HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+  HAL_LPTIM_PWM_Stop(&hlptim1, LPTIM_CHANNEL_4);
 }
 
 static inline void led_green_on(void)
@@ -387,6 +390,7 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM3_Init();
   MX_LPUART2_UART_Init();
+  MX_LPTIM1_Init();
   /* USER CODE BEGIN 2 */
 
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
@@ -666,6 +670,50 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief LPTIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_LPTIM1_Init(void)
+{
+
+  /* USER CODE BEGIN LPTIM1_Init 0 */
+
+  /* USER CODE END LPTIM1_Init 0 */
+
+  LPTIM_OC_ConfigTypeDef sConfig1 = {0};
+
+  /* USER CODE BEGIN LPTIM1_Init 1 */
+
+  /* USER CODE END LPTIM1_Init 1 */
+  hlptim1.Instance = LPTIM1;
+  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
+  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+  hlptim1.Init.Period = 65535;
+  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+  hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
+  hlptim1.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
+  hlptim1.Init.RepetitionCounter = 0;
+  if (HAL_LPTIM_Init(&hlptim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfig1.Pulse = 6500;
+  sConfig1.OCPolarity = LPTIM_OCPOLARITY_HIGH;
+  if (HAL_LPTIM_OC_ConfigChannel(&hlptim1, &sConfig1, LPTIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN LPTIM1_Init 2 */
+
+  /* USER CODE END LPTIM1_Init 2 */
+  HAL_LPTIM_MspPostInit(&hlptim1);
+
+}
+
+/**
   * @brief LPUART2 Initialization Function
   * @param None
   * @retval None
@@ -850,14 +898,9 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 6500;
+  sConfigOC.Pulse = 1000;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.Pulse = 1000;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
