@@ -102,6 +102,15 @@ int __io_putchar(int ch)
 }
 #endif  /* DEBUG_PRINT */
 
+void set_refresh_rate(int refresh_rate_sec)
+{
+  HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+
+  printf("Setting RTC wake up to %d seconds\n", refresh_rate_sec);
+  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, refresh_rate_sec - 1,
+                              RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
+}
+
 static inline void led_red_on(void)
 {
   HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_4);
@@ -453,10 +462,7 @@ int main(void)
   read_data_and_draw(0);
 
   /* Schedule RTC wake up */
-  HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
-  printf("Setting RTC wake up to %d seconds\n", g_conf.refresh_rate_sec);
-  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, g_conf.refresh_rate_sec - 1,
-			      RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
+  set_refresh_rate(g_conf.refresh_rate_sec);
 
   /* Display */
   EPD_1IN54_V2_DisplayPartBaseImage(gImage);
