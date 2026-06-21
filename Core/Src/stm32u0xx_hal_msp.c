@@ -259,14 +259,23 @@ void HAL_LPTIM_MspPostInit(LPTIM_HandleTypeDef* hlptim)
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**LPTIM1 GPIO Configuration
+    PB2     ------> LPTIM1_CH1
+    PB3     ------> LPTIM1_CH3
     PB4     ------> LPTIM1_CH4
     */
-    GPIO_InitStruct.Pin = LED_R_Pin;
+    GPIO_InitStruct.Pin = LED_Y_V2_Pin|LED_R_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF1_LPTIM1;
-    HAL_GPIO_Init(LED_R_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = LED_G_V2_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF2_LPTIM1;
+    HAL_GPIO_Init(LED_G_V2_GPIO_Port, &GPIO_InitStruct);
 
     /* USER CODE BEGIN LPTIM1_MspPostInit 1 */
 
