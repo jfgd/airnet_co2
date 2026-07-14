@@ -48,6 +48,7 @@ static int mod(int a, int b)
 struct conf g_conf = {
 	.refresh_rate_sec = 5,
 	.skin = CONF_SKIN_EMOJI,
+	.led_co2_ppm = 0,
 	.debug_counter = 0,
 	.debug_bat_voltage = 0,
 	.temperature_unit = CONF_TEMP_CELSIUS,
@@ -92,6 +93,19 @@ int menu_callback_set_refresh_rate(int32_t old_refresh_rate, int32_t new_refresh
 	return 0;
 }
 
+int menu_callback_led_level(int32_t old_ppm_threshold, int32_t new_ppm_threshold)
+{
+	printf("LED callback %ld -> %ld\n",
+	       old_ppm_threshold, new_ppm_threshold);
+
+	if (new_ppm_threshold == INT32_MAX) {
+		led_all_off();
+		return 0;
+	}
+
+	return 0;
+}
+
 struct menu_list g_menu[] = {
 	{
 		.name = "Refresh Rate",
@@ -127,6 +141,21 @@ struct menu_list g_menu[] = {
 			  .name = "Emoji (Inverted Color)" },
 			{ .value = CONF_SKIN_SLIDER_EMOJI_INVERTED,
 			  .name = "Slider + Emoji Inv. Col" },
+		},
+	},
+	{
+		.name = "LED level",
+		.help = "Select at which CO2 ppm threshold LED is turned on (consume more battery)",
+		.type = SELECT,
+		.value = &g_conf.led_co2_ppm,
+		.callback = menu_callback_led_level,
+		.items = {
+			{ .value = INT32_MAX, .name = "Never" },
+			{ .value = 0, .name = "Always" },
+			{ .value = 600, .name = "600 ppm" },
+			{ .value = 1000, .name = "1000 ppm" },
+			{ .value = 1500, .name = "1500 ppm" },
+			{ .value = 2000, .name = "2000 ppm" },
 		},
 	},
 	{

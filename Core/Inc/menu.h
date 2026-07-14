@@ -45,6 +45,7 @@ enum conf_skin_value {
 struct conf {
 	int32_t refresh_rate_sec;
 	enum conf_skin_value skin;
+	int32_t led_co2_ppm;
 	int32_t debug_counter;
 	int32_t debug_bat_voltage;
 	enum conf_temperature_unit temperature_unit;

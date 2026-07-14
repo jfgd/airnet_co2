@@ -141,6 +141,13 @@ static inline void led_yellow_off(void)
   HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
 }
 
+void led_all_off(void)
+{
+  led_green_off();
+  led_yellow_off();
+  led_red_off();
+}
+
 static void led_roll(int per_led_delay_ms, int iterations)
 {
   for (int i = 0 ; i < iterations ; i++) {
@@ -153,6 +160,29 @@ static void led_roll(int per_led_delay_ms, int iterations)
     led_green_off();
     HAL_Delay(per_led_delay_ms);
     led_yellow_off();
+  }
+}
+
+void led_display_co2_level(int co2_ppm, int treshold_ppm)
+{
+  if (treshold_ppm == INT32_MAX) {
+    /* Callback has already turned off the LEDs */
+    return;
+  }
+
+  led_all_off();
+
+  if (co2_ppm < treshold_ppm) {
+    printf("Below threshold\n");
+    return;
+  }
+
+  if (co2_ppm > 1500) {
+    led_red_on();
+  } else if (co2_ppm > 1000) {
+    led_yellow_on();
+  } else {
+    led_green_on();
   }
 }
 
@@ -351,6 +381,8 @@ static void read_data_and_draw(int display)
   int powered = HAL_GPIO_ReadPin(nPGOOD_GPIO_Port, nPGOOD_Pin) ? 0 : 1;;
 
   TS(skin_update(g_conf.skin, gImage, co2_ppm, temperature, humidity, vbat_mv, powered, g_conf.debug_counter, g_conf.debug_bat_voltage)); /* 260 ms ! */
+
+  led_display_co2_level(co2_ppm, g_conf.led_co2_ppm);
 
   printf("Loop duration : %ld ms\n", rtc_get_ms() - ts_ms_start);
 
@@ -718,6 +750,7 @@ static void MX_LPTIM1_Init(void)
     Error_Handler();
   }
   sConfig1.Pulse = 6500;
+  sConfig1.OCPolarity = LPTIM_OCPOLARITY_LOW;
   if (HAL_LPTIM_OC_ConfigChannel(&hlptim1, &sConfig1, LPTIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
