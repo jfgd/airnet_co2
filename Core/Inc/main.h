@@ -54,8 +54,6 @@ extern "C" {
 
 void HAL_LPTIM_MspPostInit(LPTIM_HandleTypeDef *hlptim);
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -77,20 +75,16 @@ void led_all_off(void);
 #define EPD_RST_GPIO_Port GPIOA
 #define EPD_BUSY_Pin GPIO_PIN_6
 #define EPD_BUSY_GPIO_Port GPIOA
-#define LED_Y_Pin GPIO_PIN_0
-#define LED_Y_GPIO_Port GPIOB
-#define LED_Y_V2_Pin GPIO_PIN_2
-#define LED_Y_V2_GPIO_Port GPIOB
+#define LED_B_Pin GPIO_PIN_2
+#define LED_B_GPIO_Port GPIOB
 #define nPGOOD_Pin GPIO_PIN_8
 #define nPGOOD_GPIO_Port GPIOA
 #define BUTTON_Pin GPIO_PIN_12
 #define BUTTON_GPIO_Port GPIOA
 #define BUTTON_EXTI_IRQn EXTI4_15_IRQn
-#define LED_G_V2_Pin GPIO_PIN_3
-#define LED_G_V2_GPIO_Port GPIOB
-#define LED_R_Pin GPIO_PIN_4
+#define LED_R_Pin GPIO_PIN_3
 #define LED_R_GPIO_Port GPIOB
-#define LED_G_Pin GPIO_PIN_5
+#define LED_G_Pin GPIO_PIN_4
 #define LED_G_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
