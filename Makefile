@@ -71,6 +71,7 @@ Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_lptim.c
 C_SOURCES += Core/Src/skin.c
 C_SOURCES += Core/Src/menu.c
 C_SOURCES += Core/Src/button_menu.c
+C_SOURCES += Core/Src/rgb_led.c
 
 C_SOURCES += Core/Src/sensirion_i2c_hal.c embedded-i2c-stcc4/sensirion_common.c embedded-i2c-stcc4/sensirion_i2c.c embedded-i2c-stcc4/stcc4_i2c.c
 

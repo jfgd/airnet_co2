@@ -59,6 +59,9 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
+/* Exported so other modules (e.g. rgb_led.c) can drive LPTIM1 PWM channels */
+extern LPTIM_HandleTypeDef hlptim1;
+
 void set_refresh_rate(int refresh_rate_sec);
 void led_all_off(void);
 

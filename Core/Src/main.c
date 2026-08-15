@@ -26,6 +26,7 @@
 #include "skin.h"
 #include "menu.h"
 #include "button_menu.h"
+#include "rgb_led.h"
 
 #include "stcc4_i2c.h"
 #include "sensirion_i2c_hal.h"
@@ -108,59 +109,26 @@ void set_refresh_rate(int refresh_rate_sec)
                               RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
 }
 
-static inline void led_red_on(void)
-{
-  HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_3);
-}
-
-static inline void led_red_off(void)
-{
-  HAL_LPTIM_PWM_Stop(&hlptim1, LPTIM_CHANNEL_3);
-}
-
-static inline void led_green_on(void)
-{
-  HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_4);
-}
-
-static inline void led_green_off(void)
-{
-  HAL_LPTIM_PWM_Stop(&hlptim1, LPTIM_CHANNEL_4);
-}
-
-static inline void led_yellow_on(void)
-{
-  HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_4);
-  HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_3);
-  //HAL_LPTIM_PWM_Start(&hlptim1, LPTIM_CHANNEL_1);
-}
-
-static inline void led_yellow_off(void)
-{
-  HAL_LPTIM_PWM_Stop(&hlptim1, LPTIM_CHANNEL_4);
-  HAL_LPTIM_PWM_Stop(&hlptim1, LPTIM_CHANNEL_3);
-  //HAL_LPTIM_PWM_Stop(&hlptim1, LPTIM_CHANNEL_1);
-}
+/* CO2 ppm range over which rgb_led_display_co2_level() interpolates from
+ * green (good air quality) to red (bad air quality), passing by yellow. */
+#define CO2_LED_GOOD_PPM 800
+#define CO2_LED_BAD_PPM  1500
 
 void led_all_off(void)
 {
-  led_green_off();
-  led_yellow_off();
-  led_red_off();
+  rgb_led_off();
 }
 
 static void led_roll(int per_led_delay_ms, int iterations)
 {
   for (int i = 0 ; i < iterations ; i++) {
-    led_red_on();
+    rgb_led_set_color(255, 0, 0);
     HAL_Delay(per_led_delay_ms);
-    led_green_on();
-    led_red_off();
+    rgb_led_set_color(0, 255, 0);
     HAL_Delay(per_led_delay_ms);
-    led_yellow_on();
-    led_green_off();
+    rgb_led_set_color(0, 0, 255);
     HAL_Delay(per_led_delay_ms);
-    led_yellow_off();
+    rgb_led_off();
   }
 }
 
@@ -171,20 +139,13 @@ void led_display_co2_level(int co2_ppm, int treshold_ppm)
     return;
   }
 
-  led_all_off();
-
   if (co2_ppm < treshold_ppm) {
     printf("Below threshold\n");
+    rgb_led_off();
     return;
   }
 
-  if (co2_ppm > 1500) {
-    led_red_on();
-  } else if (co2_ppm > 1000) {
-    led_yellow_on();
-  } else {
-    led_green_on();
-  }
+  rgb_led_display_co2_level(co2_ppm, CO2_LED_GOOD_PPM, CO2_LED_BAD_PPM);
 }
 
 static inline void epd_power_on(void)
@@ -433,6 +394,8 @@ int main(void)
   MX_LPUART2_UART_Init();
   MX_LPTIM1_Init();
   /* USER CODE BEGIN 2 */
+
+  rgb_led_init();
 
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 
@@ -991,9 +954,9 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
-    led_red_on();
+    rgb_led_set_color(255, 0, 0);
     HAL_Delay(300);
-    led_red_off();
+    rgb_led_off();
     HAL_Delay(300);
     printf("error handler\n");
   }
