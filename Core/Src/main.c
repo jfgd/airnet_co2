@@ -260,6 +260,8 @@ static void read_data_and_draw(int display)
   uint16_t relative_humidity_raw = 0;
   uint16_t sensor_status_raw = 0;
   uint32_t adc_val;
+  uint32_t vrefint_val;
+  uint32_t vdda_mv;
 
   ts_ms_start = rtc_get_ms();   /* t = 0 ms */
 
@@ -271,7 +273,7 @@ static void read_data_and_draw(int display)
     Error_Handler();
   }
 
-  /* Start reading bat voltage */
+  /* Start reading bat voltage (rank 1: VBAT, rank 2: VREFINT) */
   if (HAL_ADC_Start(&hadc1) != HAL_OK)
   {
       Error_Handler();
@@ -279,9 +281,16 @@ static void read_data_and_draw(int display)
 
   HAL_ADC_PollForConversion(&hadc1, 10000);
   adc_val = HAL_ADC_GetValue(&hadc1);
-  vbat_mv = (adc_val * 3 * 3300) / 4095;
-  printf("adc %ld %ld mV %ld ms\n", adc_val, vbat_mv,rtc_get_ms());
+
+  HAL_ADC_PollForConversion(&hadc1, 10000);
+  vrefint_val = HAL_ADC_GetValue(&hadc1);
   HAL_ADC_Stop(&hadc1);
+
+  /* Compute the actual VDDA (mV) from the VREFINT reading and the factory
+   * calibration value, instead of assuming a fixed VDDA */
+  vdda_mv = __LL_ADC_CALC_VREFANALOG_VOLTAGE(vrefint_val, LL_ADC_RESOLUTION_12B);
+  vbat_mv = (adc_val * 3 * vdda_mv) / 4095;
+  printf("adc %ld vrefint %ld vdda %ld mV vbat %ld mV %ld ms\n", adc_val, vrefint_val, vdda_mv, vbat_mv, rtc_get_ms());
 
   /* Wait exit sleep done */
   while (rtc_get_ms() - ts_ms < 5) {
@@ -577,19 +586,19 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV1;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 2;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
-  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
+  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
+  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_160CYCLES_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -606,7 +615,24 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_VREFINT;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN ADC1_Init 2 */
+
+  /** Run the self calibration to remove ADC offset/gain error
+   */
+  if (HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   /* USER CODE END ADC1_Init 2 */
 
