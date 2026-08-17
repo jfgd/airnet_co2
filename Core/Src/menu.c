@@ -285,7 +285,7 @@ static void menu_clear(void)
 	/* Help zone */
 	y += SELECT_ROW_LINE_WIDTH + SELECT_ROW_HEIGHT;
 	Paint_ClearWindows(TEXT_OFFSET_HELP_X, y + TEXT_OFFSET_Y, EPD_1IN54_V2_WIDTH,
-			   y + TEXT_OFFSET_Y + font12.height*2, WHITE);
+			   y + TEXT_OFFSET_Y + font12.height*4, WHITE);
 
 }
 
