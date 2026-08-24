@@ -717,7 +717,7 @@ static void MX_LPTIM1_Init(void)
   hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
   hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
   hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
-  hlptim1.Init.Period = 65535;
+  hlptim1.Init.Period = 255;
   hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
   hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
   hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
@@ -727,7 +727,7 @@ static void MX_LPTIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfig1.Pulse = 6500;
+  sConfig1.Pulse = 25;
   sConfig1.OCPolarity = LPTIM_OCPOLARITY_LOW;
   if (HAL_LPTIM_OC_ConfigChannel(&hlptim1, &sConfig1, LPTIM_CHANNEL_1) != HAL_OK)
   {
