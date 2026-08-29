@@ -69,14 +69,15 @@ struct rgb_led_channel {
   GPIO_TypeDef *gpio_port;
   uint16_t gpio_pin;
   uint32_t gpio_af;
+  uint16_t intensity_correction;
   uint8_t current_intensity; /* 0 means the channel is disconnected from
                                * LPTIM1 and its GPIO is forced HIGH (off). */
 };
 
 static struct rgb_led_channel rgb_led_channels[3] = {
-  { RGB_LED_CHANNEL_RED,   NULL, 0, 0, 0 },
-  { RGB_LED_CHANNEL_GREEN, NULL, 0, 0, 0 },
-  { RGB_LED_CHANNEL_BLUE,  NULL, 0, 0, 0 },
+  { RGB_LED_CHANNEL_RED,   NULL, 0, 0, 100, 0 },
+  { RGB_LED_CHANNEL_GREEN, NULL, 0, 0, 30,  0 },
+  { RGB_LED_CHANNEL_BLUE,  NULL, 0, 0, 20,  0 },
 };
 
 static uint32_t rgb_led_period(void)
@@ -145,12 +146,16 @@ static void rgb_led_channel_set_intensity(struct rgb_led_channel *ch, uint8_t in
 
 static void rgb_led_channel_set(struct rgb_led_channel *ch, uint8_t intensity)
 {
+  uint8_t corrected_intensity = ch->intensity_correction != 100 ?
+    (intensity * ch->intensity_correction) / 100 : intensity;
+  printf("led %ld: %d -> %d\n", ch->lptim_channel, intensity, corrected_intensity);
+
   if (intensity == 0U) {
     if (ch->current_intensity != 0U) {
       rgb_led_channel_force_off(ch);
     }
   } else {
-    rgb_led_channel_set_intensity(ch, intensity);
+    rgb_led_channel_set_intensity(ch, corrected_intensity);
   }
 }
 
