@@ -216,18 +216,12 @@ void rgb_led_display_co2_level(int32_t co2_ppm, int32_t good_ppm, int32_t bad_pp
   range = bad_ppm - good_ppm;
   position = co2_ppm - good_ppm; /* 0 .. range */
 
-  if (position <= (range / 2)) {
-    /* Green -> Yellow: ramp red up, keep green at max. */
-    red = (uint8_t)((position * 2 * RGB_LED_CO2_MAX_INTENSITY) / range);
-    green = RGB_LED_CO2_MAX_INTENSITY;
-  } else {
-    /* Yellow -> Red: keep red at max, ramp green down. */
-    int32_t position_in_upper_half = (position - (range / 2)) * 2;
-
-    red = RGB_LED_CO2_MAX_INTENSITY;
-    green = (uint8_t)(RGB_LED_CO2_MAX_INTENSITY -
-                       (position_in_upper_half * RGB_LED_CO2_MAX_INTENSITY) / range);
-  }
+  /* Linear cross-fade from green to red, red + green always adding up to
+   * RGB_LED_CO2_MAX_INTENSITY so the LED's overall brightness stays
+   * constant across the whole gradient (yellow is just as bright as pure
+   * green or pure red, not twice as bright). */
+  red = (uint8_t)((position * RGB_LED_CO2_MAX_INTENSITY) / range);
+  green = (uint8_t)(RGB_LED_CO2_MAX_INTENSITY - red);
 
   rgb_led_set_color(red, green, 0);
 }
