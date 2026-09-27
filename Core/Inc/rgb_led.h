@@ -48,6 +48,6 @@ void rgb_led_off(void);
  * apply it to the LED. Below good_ppm the LED is solid green, above bad_ppm
  * the LED is solid red, in between the color is linearly interpolated
  * through yellow. */
-void rgb_led_display_co2_level(int32_t co2_ppm, int32_t good_ppm, int32_t bad_ppm);
+void rgb_led_display_co2_level(uint16_t co2_ppm, int treshold_ppm);
 
 #endif /* __RGB_LED_H */

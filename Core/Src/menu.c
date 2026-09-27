@@ -34,6 +34,7 @@ extern volatile uint32_t g_ts_ms_last_button_pressed;
 extern volatile uint32_t g_ts_ms_previous_button_pressed;
 extern volatile int g_button_pressed_flag;
 extern volatile struct button_fsm g_button_fsm;
+extern uint16_t g_co2_ppm;
 
 extern UBYTE gImage[];
 
@@ -100,10 +101,7 @@ int menu_callback_led_level(int32_t old_ppm_threshold, int32_t new_ppm_threshold
 	printf("LED callback %ld -> %ld\n",
 	       old_ppm_threshold, new_ppm_threshold);
 
-	if (new_ppm_threshold == INT32_MAX) {
-		led_all_off();
-		return 0;
-	}
+	rgb_led_display_co2_level(g_co2_ppm, new_ppm_threshold);
 
 	return 0;
 }

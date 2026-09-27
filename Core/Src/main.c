@@ -71,6 +71,7 @@ volatile uint32_t g_ts_ms_last_button_pressed = 0;
 volatile uint32_t g_ts_ms_previous_button_pressed = 0;
 volatile int g_button_pressed_flag = 0;
 volatile struct button_fsm g_button_fsm;
+uint16_t g_co2_ppm = 0;
 
 uint8_t gImage[5000];
 
@@ -109,11 +110,6 @@ void set_refresh_rate(int refresh_rate_sec)
                               RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
 }
 
-/* CO2 ppm range over which rgb_led_display_co2_level() interpolates from
- * green (good air quality) to red (bad air quality), passing by yellow. */
-#define CO2_LED_GOOD_PPM 800
-#define CO2_LED_BAD_PPM  1500
-
 void led_all_off(void)
 {
   rgb_led_off();
@@ -130,22 +126,6 @@ static void led_roll(int per_led_delay_ms, int iterations)
     HAL_Delay(per_led_delay_ms);
     rgb_led_off();
   }
-}
-
-void led_display_co2_level(int co2_ppm, int treshold_ppm)
-{
-  if (treshold_ppm == INT32_MAX) {
-    /* Callback has already turned off the LEDs */
-    return;
-  }
-
-  if (co2_ppm < treshold_ppm) {
-    printf("Below threshold\n");
-    rgb_led_off();
-    return;
-  }
-
-  rgb_led_display_co2_level(co2_ppm, CO2_LED_GOOD_PPM, CO2_LED_BAD_PPM);
 }
 
 static inline void epd_power_on(void)
@@ -341,7 +321,7 @@ static void read_data_and_draw(int display)
     printf("Error stcc4_enter_sleep_mode\n");
   }
 
-  co2_ppm = co2_concentration_raw;
+  co2_ppm = g_co2_ppm = co2_concentration_raw;
   temperature = ((175 * (uint32_t)temperature_raw) / 655) - 4500; /* in c°C */
   humidity = ((125 * (uint32_t)relative_humidity_raw) / 65535) - 6;
   printf("sensor: co2 is %02dppm.\n", co2_ppm);
@@ -353,7 +333,7 @@ static void read_data_and_draw(int display)
 
   TS(skin_update(g_conf.skin, gImage, co2_ppm, temperature, humidity, vbat_mv, powered, g_conf.debug_counter, g_conf.debug_bat_voltage)); /* 260 ms ! */
 
-  led_display_co2_level(co2_ppm, g_conf.led_co2_ppm);
+  rgb_led_display_co2_level(co2_ppm, g_conf.led_co2_ppm);
 
   printf("Loop duration : %ld ms\n", rtc_get_ms() - ts_ms_start);
 

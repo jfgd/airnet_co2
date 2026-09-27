@@ -57,6 +57,11 @@
 #include "main.h"
 #include "rgb_led.h"
 
+/* CO2 ppm range over which rgb_led_display_co2_level() interpolates from
+ * green (good air quality) to red (bad air quality), passing by yellow. */
+#define CO2_LED_GOOD_PPM 800
+#define CO2_LED_BAD_PPM  1500
+
 #define RGB_LED_CHANNEL_RED    LPTIM_CHANNEL_3
 #define RGB_LED_CHANNEL_GREEN  LPTIM_CHANNEL_4
 #define RGB_LED_CHANNEL_BLUE   LPTIM_CHANNEL_1
@@ -237,31 +242,31 @@ void rgb_led_off(void)
   rgb_led_set_color(0, 0, 0);
 }
 
-void rgb_led_display_co2_level(int32_t co2_ppm, int32_t good_ppm, int32_t bad_ppm)
+static void _rgb_led_display_co2_level(uint16_t co2_ppm)
 {
   int32_t range;
   int32_t position;
   uint8_t red;
   uint8_t green;
 
-  if (bad_ppm <= good_ppm) {
+  if (CO2_LED_BAD_PPM <= CO2_LED_GOOD_PPM) {
     /* Degenerate configuration, avoid a division by zero below. */
     rgb_led_set_color(RGB_LED_CO2_MAX_INTENSITY, 0, 0);
     return;
   }
 
-  if (co2_ppm <= good_ppm) {
+  if (co2_ppm <= CO2_LED_GOOD_PPM) {
     rgb_led_set_color(0, RGB_LED_CO2_MAX_INTENSITY, 0);
     return;
   }
 
-  if (co2_ppm >= bad_ppm) {
+  if (co2_ppm >= CO2_LED_BAD_PPM) {
     rgb_led_set_color(RGB_LED_CO2_MAX_INTENSITY, 0, 0);
     return;
   }
 
-  range = bad_ppm - good_ppm;
-  position = co2_ppm - good_ppm; /* 0 .. range */
+  range = CO2_LED_BAD_PPM - CO2_LED_GOOD_PPM;
+  position = co2_ppm - CO2_LED_GOOD_PPM; /* 0 .. range */
 
   /* Linear cross-fade from green to red, red + green always adding up to
    * RGB_LED_CO2_MAX_INTENSITY so the LED's overall brightness stays
@@ -271,4 +276,20 @@ void rgb_led_display_co2_level(int32_t co2_ppm, int32_t good_ppm, int32_t bad_pp
   green = (uint8_t)(RGB_LED_CO2_MAX_INTENSITY - red);
 
   rgb_led_set_color(red, green, 0);
+}
+
+
+void rgb_led_display_co2_level(uint16_t co2_ppm, int treshold_ppm)
+{
+  if (treshold_ppm == INT32_MAX) {
+    /* Callback has already turned off the LEDs */
+    return;
+  }
+
+  if (co2_ppm < treshold_ppm) {
+    rgb_led_off();
+    return;
+  }
+
+  _rgb_led_display_co2_level(co2_ppm);
 }
