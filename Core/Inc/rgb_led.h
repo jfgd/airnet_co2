@@ -34,6 +34,10 @@
  * state and enables their output pins. */
 void rgb_led_init(void);
 
+/* Global user brightness, in percent of the requested intensity, applied on
+ * top of every rgb_led_set_color() / rgb_led_display_co2_level() call. */
+void rgb_led_set_brightness(uint8_t percent);
+
 /* Set the LED to an arbitrary RGB color, each component in [0, 255]. */
 void rgb_led_set_color(uint8_t red, uint8_t green, uint8_t blue);
 

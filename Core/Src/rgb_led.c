@@ -80,6 +80,15 @@ static struct rgb_led_channel rgb_led_channels[3] = {
   { RGB_LED_CHANNEL_BLUE,  NULL, 0, 0, 20,  0 },
 };
 
+/* User selected brightness (menu entry "LED Brightness"), in percent of the
+ * requested color intensity. Applied on top of the per-channel intensity
+ * correction, on every channel. */
+static uint8_t rgb_led_brightness_percent = 100U;
+
+/* Last color requested through rgb_led_set_color(), kept so a brightness
+ * change can be applied immediately without waiting for the next refresh. */
+static uint8_t rgb_led_color[3] = { 0, 0, 0 };
+
 static uint32_t rgb_led_period(void)
 {
   return hlptim1.Init.Period;
@@ -146,16 +155,29 @@ static void rgb_led_channel_set_intensity(struct rgb_led_channel *ch, uint8_t in
 
 static void rgb_led_channel_set(struct rgb_led_channel *ch, uint8_t intensity)
 {
-  uint8_t corrected_intensity = ch->intensity_correction != 100 ?
-    (intensity * ch->intensity_correction) / 100 : intensity;
-  printf("led %ld: %d -> %d\n", ch->lptim_channel, intensity, corrected_intensity);
+  uint32_t corrected_intensity = intensity;
+
+  if (ch->intensity_correction != 100) {
+    corrected_intensity = (corrected_intensity * ch->intensity_correction) / 100U;
+  }
+
+  if (rgb_led_brightness_percent != 100U) {
+    corrected_intensity = (corrected_intensity * rgb_led_brightness_percent) / 100U;
+  }
+
+  /* Never let a lit channel round down to 0: 0 is the "fully off" state
+   * (channel disconnected from LPTIM1), which would change the color
+   * instead of only dimming it. */
+  if (intensity != 0U && corrected_intensity == 0U) {
+    corrected_intensity = 1U;
+  }
 
   if (intensity == 0U) {
     if (ch->current_intensity != 0U) {
       rgb_led_channel_force_off(ch);
     }
   } else {
-    rgb_led_channel_set_intensity(ch, corrected_intensity);
+    rgb_led_channel_set_intensity(ch, (uint8_t)corrected_intensity);
   }
 }
 
@@ -183,8 +205,28 @@ void rgb_led_init(void)
   rgb_led_channel_force_off(&rgb_led_channels[2]);
 }
 
+void rgb_led_set_brightness(uint8_t percent)
+{
+  if (percent > 100U) {
+    percent = 100U;
+  }
+
+  if (percent == rgb_led_brightness_percent) {
+    return;
+  }
+
+  rgb_led_brightness_percent = percent;
+
+  /* Re-apply the current color so the new brightness is visible right away. */
+  rgb_led_set_color(rgb_led_color[0], rgb_led_color[1], rgb_led_color[2]);
+}
+
 void rgb_led_set_color(uint8_t red, uint8_t green, uint8_t blue)
 {
+  rgb_led_color[0] = red;
+  rgb_led_color[1] = green;
+  rgb_led_color[2] = blue;
+
   rgb_led_channel_set(&rgb_led_channels[0], red);
   rgb_led_channel_set(&rgb_led_channels[1], green);
   rgb_led_channel_set(&rgb_led_channels[2], blue);
