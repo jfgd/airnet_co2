@@ -405,6 +405,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   rgb_led_init();
+  rgb_led_set_brightness((uint8_t)g_conf.led_brightness_percent);
 
   printf("\n\nHello from AirNet CO2 %ld ms\n", rtc_get_ms());
 

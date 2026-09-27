@@ -28,6 +28,7 @@
 #include "GUI_Paint.h"
 #include "menu.h"
 #include "button_menu.h"
+#include "rgb_led.h"
 
 extern volatile uint32_t g_ts_ms_last_button_pressed;
 extern volatile uint32_t g_ts_ms_previous_button_pressed;
@@ -49,6 +50,7 @@ struct conf g_conf = {
 	.refresh_rate_sec = 5,
 	.skin = CONF_SKIN_EMOJI,
 	.led_co2_ppm = 0,
+	.led_brightness_percent = 100,
 	.debug_counter = 0,
 	.debug_bat_voltage = 0,
 	.temperature_unit = CONF_TEMP_CELSIUS,
@@ -106,6 +108,16 @@ int menu_callback_led_level(int32_t old_ppm_threshold, int32_t new_ppm_threshold
 	return 0;
 }
 
+int menu_callback_led_brightness(int32_t old_percent, int32_t new_percent)
+{
+	printf("LED brightness callback %ld -> %ld\n",
+	       old_percent, new_percent);
+
+	rgb_led_set_brightness((uint8_t)new_percent);
+
+	return 0;
+}
+
 struct menu_list g_menu[] = {
 	{
 		.name = "Refresh Rate",
@@ -156,6 +168,19 @@ struct menu_list g_menu[] = {
 			{ .value = 1000, .name = "1000 ppm" },
 			{ .value = 1500, .name = "1500 ppm" },
 			{ .value = 2000, .name = "2000 ppm" },
+		},
+	},
+	{
+		.name = "LED Brightness",
+		.help = "Select LED brightness (lower level consume less battery)",
+		.type = SELECT,
+		.value = &g_conf.led_brightness_percent,
+		.callback = menu_callback_led_brightness,
+		.items = {
+			{ .value = 100, .name = "100 %" },
+			{ .value = 75, .name = "75 %" },
+			{ .value = 50, .name = "50 %" },
+			{ .value = 20, .name = "20 %" },
 		},
 	},
 	{
