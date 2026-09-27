@@ -375,6 +375,7 @@ int main(void)
   int16_t err = 0;
   uint32_t stcc4_product_id;
   uint64_t stcc4_sn;
+  int full_refresh = 0;
 
   /* USER CODE END 1 */
 
@@ -485,6 +486,8 @@ int main(void)
     if (BUTTON_GPIO_STATE() == 0
         && (rtc_get_ms() - g_ts_ms_last_button_pressed) > 900) {
       menu_enter();
+      EPD_1IN54_V2_Init();
+      full_refresh = 1;
       skin_prepare(g_conf.skin, gImage);
       /* continue; */
     }
@@ -502,12 +505,17 @@ int main(void)
     ts_ms_loop = rtc_get_ms();
     printf("\n\n");
 
-    read_data_and_draw(1);
+    read_data_and_draw(full_refresh ? 0 : 1);
 
     epd_power_on();
     //EPD_1IN54_V2_Init_Partial(); /* Wake up */
     printf("EPD init partial done %ld ms\n", rtc_get_ms());
     uint32_t ts_disp_start = rtc_get_ms();
+    if (full_refresh) {
+      full_refresh = 0;
+      EPD_1IN54_V2_DisplayPartBaseImage(gImage);
+      EPD_1IN54_V2_Init_Partial();
+    }
     EPD_1IN54_V2_DisplayPart(gImage); /* 812 ms */
     printf("EPD display done %ld ms (%ld ms)\n", rtc_get_ms(),
 	   rtc_get_ms() - ts_disp_start);
