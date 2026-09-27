@@ -61,6 +61,7 @@ extern jFont CO2ppm25NotoSansMedium;
 extern jFont Thermometer39;
 extern jFont Droplet20;
 extern jFont Lightning27;
+extern jFont BatteryLow28;
 extern jFont EmojiFaces;
 
 #endif /* __JFONTS_H */

@@ -28,6 +28,8 @@
 #include "GUI_Paint.h"
 #include "skin.h"
 
+#define LOW_BATTERY_VOLTAGE_THRESHOLD_MV 3050
+
 #define STR_DISP_LEN 16
 
 
@@ -70,18 +72,18 @@ static void draw_slider_border(uint8_t *image, int xstart, int ystart,
 
   /* Clear left circle inside part */
   Paint_ClearWindows(xstart + radius, ystart, xstart + height + border,
-		     ystart + height, backcolor);
+         ystart + height, backcolor);
 
   /* Clear right circle inside part */
   Paint_ClearWindows(xstart + width - height - border, ystart, xstart + width - radius,
-		     ystart + height, backcolor);
+         ystart + height, backcolor);
 
   /* Top line */
   Paint_SetPixelHLine(xstart + radius, xstart + width - radius,
-		      ystart - border, color); /* border = 1 */
+          ystart - border, color); /* border = 1 */
   /* Bottom line */
   Paint_SetPixelHLine(xstart + radius, xstart + width - radius,
-		      ystart + height -border, color); /* border = 1 */
+          ystart + height -border, color); /* border = 1 */
 
 }
 
@@ -139,7 +141,7 @@ static void skin_co2_horizontal_prepare(uint8_t *image, int fcolor,
 }
 
 static void skin_slider_prepare(uint8_t *image, int fcolor, int bcolor,
-				int y, int height)
+        int y, int height)
 {
   UNUSED(image);
 
@@ -234,14 +236,15 @@ static void skin_emoji_update(
 }
 
 static void skin_power_update(uint8_t *image, int fcolor, int bcolor, bool powered,
-			      int x, int y)
+                              bool low_battery, int x, int y)
 {
   UNUSED(image);
   /* Power */
+  Paint_ClearWindows(x, y, x+BatteryLow28.max_width, y+BatteryLow28.height, bcolor);
   if (powered) {
     Paint_DrawjChar(x, y, 'L', &Lightning27, fcolor, bcolor);
-  } else {
-    Paint_ClearWindows(x, y, x+Lightning27.max_width, y+Lightning27.height, bcolor);
+  } else if (low_battery) {
+    Paint_DrawjChar(x, y, 'B', &BatteryLow28, fcolor, bcolor);
   }
 }
 
@@ -281,9 +284,9 @@ static void skin_slider_update(uint8_t *image, int fcolor, int bcolor,
   static int perthousand_prev = 0;
   int perthousand = (1000 * (int)co2_ppm) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM) - ((1000 * MIN_SLIDER_PPM) / (MAX_SLIDER_PPM - MIN_SLIDER_PPM));
   draw_slider_cursor(image, 0, y, EPD_1IN54_V2_WIDTH, height,
-		     bcolor, fcolor, perthousand_prev);
+         bcolor, fcolor, perthousand_prev);
   draw_slider_cursor(image, 0, y, EPD_1IN54_V2_WIDTH, height,
-		     fcolor, bcolor, perthousand);
+         fcolor, bcolor, perthousand);
   perthousand_prev = perthousand;
 }
 
@@ -345,6 +348,7 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
   int fcolor, bcolor;
   static uint32_t counter = 0;
 
+  bool low_battery = vbat_mv <= LOW_BATTERY_VOLTAGE_THRESHOLD_MV;
 
   if (co2_ppm > 10000) {
     co2_ppm = 9999;
@@ -382,7 +386,7 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
   default:
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM);
-    skin_power_update(image, fcolor, bcolor, powered, 5, 130);
+    skin_power_update(image, fcolor, bcolor, powered, low_battery, 5, 130);
     skin_slider_update(image, fcolor, bcolor, co2_ppm, SLIDER_Y, SLIDER_HEIGHT);
     skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
                       debug_counter, debug_bat_voltage, 1, 166, 150, 166);
@@ -393,7 +397,7 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM);
     skin_emoji_update(image, fcolor, bcolor, co2_ppm, 15, 139);
-    skin_power_update(image, fcolor, bcolor, powered, 87, 145);
+    skin_power_update(image, fcolor, bcolor, powered, low_battery, 87, 145);
     skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
                       debug_counter, debug_bat_voltage, 75, 188, 150, 188);
     break;
@@ -403,9 +407,9 @@ void skin_update(enum conf_skin_value skin, uint8_t *image, uint16_t co2_ppm,
     skin_temp_rh_top_update(image, fcolor, bcolor, temperature, humidity);
     skin_co2_update(image, fcolor, bcolor, co2_ppm, XSTART_CO2_PPM, YSTART_CO2_PPM-13);
     skin_emoji_update(image, fcolor, bcolor, co2_ppm, 15, 119);
-    skin_power_update(image, fcolor, bcolor, powered, 87, 130);
+    skin_power_update(image, fcolor, bcolor, powered, low_battery, 87, 130);
     skin_slider_update(image, fcolor, bcolor, co2_ppm,
-		       SLIDER_EMOJI_Y, SLIDER_EMOJI_HEIGHT);
+           SLIDER_EMOJI_Y, SLIDER_EMOJI_HEIGHT);
     skin_debug_update(image, fcolor, bcolor, vbat_mv, counter,
                       debug_counter, debug_bat_voltage, 160, 168, 67, 168);
     break;
